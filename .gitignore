@@ -1,0 +1,11 @@
+*
+!.gitignore
+!README.md
+!.github
+!.github/*
+!.github/workflows/*                                           
+!wp-content/                                
+!wp-content/themes/                        
+!wp-content/themes/kadence-child/
+!wp-content/themes/kadence-child/**
+wp-content/themes/!(kadence-child)/
