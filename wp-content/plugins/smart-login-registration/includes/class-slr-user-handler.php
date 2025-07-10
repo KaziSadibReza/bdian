@@ -38,10 +38,6 @@ class SLR_User_Handler {
      * Validate phone number format
      */
     public function is_valid_phone($phone) {
-        if (!isset($this->settings['phone_validation']) || !$this->settings['phone_validation']) {
-            return true; // Skip validation if disabled
-        }
-        
         // Remove all non-digit characters
         $cleaned = preg_replace('/[^0-9]/', '', $phone);
         

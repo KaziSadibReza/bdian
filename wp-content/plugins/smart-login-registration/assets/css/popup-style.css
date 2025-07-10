@@ -1,7 +1,7 @@
 /* Smart Login and Registration Popup Styles */
 
 .slr-login-popup-btn {
-  background: #007cba;
+  background: #008036;
   color: #fff;
   border: none;
   padding: 12px 24px;
@@ -15,7 +15,7 @@
 }
 
 .slr-login-popup-btn:hover {
-  background: #005a87;
+  background: #008036;
   transform: translateY(-1px);
   color: #fff;
 }
@@ -133,12 +133,12 @@
 }
 
 .slr-popup-tab-nav li.active a {
-  color: #007cba;
-  border-bottom: 2px solid #007cba;
+  color: #008036;
+  border-bottom: 2px solid #008036;
 }
 
 .slr-popup-tab-nav a:hover {
-  color: #007cba;
+  color: #008036;
   background: #f8f9fa;
 }
 
@@ -195,8 +195,8 @@
 
 .slr-form-group input:focus {
   outline: none;
-  border-color: #007cba;
-  box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
+  border-color: #008036;
+  box-shadow: 0 0 0 2px rgba(0, 128, 54, 0.1);
 }
 
 .slr-checkbox-group {
@@ -219,14 +219,14 @@
 }
 
 .slr-forgot-password {
-  color: #007cba;
+  color: #008036;
   text-decoration: none;
   font-size: 14px;
   transition: color 0.3s ease;
 }
 
 .slr-forgot-password:hover {
-  color: #005a87;
+  color: #008036;
 }
 
 .slr-popup-btn {
@@ -243,12 +243,12 @@
 }
 
 .slr-btn-primary {
-  background: #007cba;
+  background: #008036;
   color: #fff;
 }
 
 .slr-btn-primary:hover {
-  background: #005a87;
+  background: #008036;
   transform: translateY(-1px);
 }
 
@@ -382,7 +382,7 @@
 .slr-resend-otp-btn {
   background: none;
   border: none;
-  color: #007cba;
+  color: #008036;
   cursor: pointer;
   font-size: 14px;
   text-decoration: underline;
@@ -390,7 +390,7 @@
 }
 
 .slr-resend-otp-btn:hover {
-  color: #005a87;
+  color: #008036;
 }
 
 .slr-resend-otp-btn:disabled {
@@ -400,14 +400,14 @@
 }
 
 .slr-back-to-login {
-  color: #007cba;
+  color: #008036;
   text-decoration: none;
   font-size: 14px;
   transition: color 0.3s ease;
 }
 
 .slr-back-to-login:hover {
-  color: #005a87;
+  color: #008036;
 }
 
 .slr-otp-login-btn {

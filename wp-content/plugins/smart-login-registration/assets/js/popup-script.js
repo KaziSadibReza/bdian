@@ -182,9 +182,13 @@ jQuery(document).ready(function ($) {
       // Clear previous messages
       $response.hide().removeClass("success error");
 
-      // Validate phone number if present
+      // Validate phone number (required)
       var phone = $form.find('input[name="phone"]').val();
-      if (phone && !SmartLoginPopup.isValidPhone(phone)) {
+      if (!phone || phone.trim() === "") {
+        $response.addClass("error").text("Phone number is required.").show();
+        return;
+      }
+      if (!SmartLoginPopup.isValidPhone(phone)) {
         $response
           .addClass("error")
           .text("Please enter a valid phone number.")
@@ -541,18 +545,22 @@ jQuery(document).ready(function ($) {
     $this.next(".phone-validation").remove();
     $this.removeClass("invalid valid");
 
-    if (phone.length > 0) {
-      if (!SmartLoginPopup.isValidPhone(phone)) {
-        $this.addClass("invalid");
-        $this.after(
-          '<div class="phone-validation" style="color: #dc3545; font-size: 12px; margin-top: 5px;">Please enter a valid phone number (e.g., 01700000000)</div>'
-        );
-      } else {
-        $this.addClass("valid");
-        $this.after(
-          '<div class="phone-validation" style="color: #28a745; font-size: 12px; margin-top: 5px;">✓ Valid phone number</div>'
-        );
-      }
+    if (phone.length === 0) {
+      // Phone is required, show error for empty field
+      $this.addClass("invalid");
+      $this.after(
+        '<div class="phone-validation" style="color: #dc3545; font-size: 12px; margin-top: 5px;">Phone number is required</div>'
+      );
+    } else if (!SmartLoginPopup.isValidPhone(phone)) {
+      $this.addClass("invalid");
+      $this.after(
+        '<div class="phone-validation" style="color: #dc3545; font-size: 12px; margin-top: 5px;">Please enter a valid phone number (e.g., 01700000000)</div>'
+      );
+    } else {
+      $this.addClass("valid");
+      $this.after(
+        '<div class="phone-validation" style="color: #28a745; font-size: 12px; margin-top: 5px;">✓ Valid phone number</div>'
+      );
     }
   });
 

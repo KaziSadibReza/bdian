@@ -71,6 +71,14 @@ class SLR_Admin {
         );
         
         add_settings_field(
+            'phone_required',
+            __('Phone Number Required', 'smart-login-registration'),
+            array($this, 'phone_required_callback'),
+            'slr_settings',
+            'slr_general_section'
+        );
+        
+        add_settings_field(
             'enable_debug',
             __('Enable Debug Logging', 'smart-login-registration'),
             array($this, 'enable_debug_callback'),
@@ -245,6 +253,13 @@ class SLR_Admin {
         $value = isset($options['phone_validation']) ? $options['phone_validation'] : true;
         echo '<input type="checkbox" name="slr_settings[phone_validation]" value="1" ' . checked(1, $value, false) . ' />';
         echo '<label>' . __('Enable phone number validation', 'smart-login-registration') . '</label>';
+    }
+    
+    public function phone_required_callback() {
+        $options = get_option('slr_settings');
+        $value = isset($options['phone_required']) ? $options['phone_required'] : true;
+        echo '<input type="checkbox" name="slr_settings[phone_required]" value="1" ' . checked(1, $value, false) . ' />';
+        echo '<label>' . __('Make phone number required during registration', 'smart-login-registration') . '</label>';
     }
     
     public function enable_debug_callback() {

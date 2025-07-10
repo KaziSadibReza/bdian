@@ -99,6 +99,7 @@ class SmartLoginRegistrationPlugin {
             'max_attempts' => 5,
             'email_template' => 'default',
             'phone_validation' => true,
+            'phone_required' => true,
             'enable_debug' => false
         );
         

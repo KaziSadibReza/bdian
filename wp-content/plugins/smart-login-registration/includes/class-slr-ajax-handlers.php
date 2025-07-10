@@ -100,13 +100,18 @@ class SLR_AJAX_Handlers {
                 'password' => $_POST['password'] ?? ''
             ));
             
+            // Validate required fields
+            if (empty($temp_data['phone'])) {
+                wp_send_json_error(array('message' => __('Phone number is required for registration.', 'smart-login-registration')));
+            }
+            
             // Validate phone number
-            if (!empty($temp_data['phone']) && !$this->user_handler->is_valid_phone($temp_data['phone'])) {
+            if (!$this->user_handler->is_valid_phone($temp_data['phone'])) {
                 wp_send_json_error(array('message' => __('Please enter a valid phone number.', 'smart-login-registration')));
             }
             
             // Check if phone already exists
-            if (!empty($temp_data['phone']) && $this->user_handler->phone_exists($temp_data['phone'])) {
+            if ($this->user_handler->phone_exists($temp_data['phone'])) {
                 wp_send_json_error(array('message' => __('This phone number is already registered.', 'smart-login-registration')));
             }
         }
@@ -329,7 +334,7 @@ class SLR_AJAX_Handlers {
         ));
         
         // Validate inputs
-        if (empty($user_data['name']) || empty($user_data['email']) || empty($user_data['password'])) {
+        if (empty($user_data['name']) || empty($user_data['email']) || empty($user_data['password']) || empty($user_data['phone'])) {
             wp_send_json_error(array('message' => __('Please fill in all required fields.', 'smart-login-registration')));
         }
         
@@ -337,11 +342,11 @@ class SLR_AJAX_Handlers {
             wp_send_json_error(array('message' => __('Please enter a valid email address.', 'smart-login-registration')));
         }
         
-        if (!empty($user_data['phone']) && !$this->user_handler->is_valid_phone($user_data['phone'])) {
+        if (!$this->user_handler->is_valid_phone($user_data['phone'])) {
             wp_send_json_error(array('message' => __('Please enter a valid phone number.', 'smart-login-registration')));
         }
         
-        if (!empty($user_data['phone']) && $this->user_handler->phone_exists($user_data['phone'])) {
+        if ($this->user_handler->phone_exists($user_data['phone'])) {
             wp_send_json_error(array('message' => __('This phone number is already registered.', 'smart-login-registration')));
         }
         

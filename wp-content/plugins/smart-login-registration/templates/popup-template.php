@@ -193,7 +193,7 @@ if (!defined('ABSPATH')) {
 
                             <div class="slr-form-group">
                                 <input type="tel" name="phone"
-                                    placeholder="<?php _e('Phone Number (Optional)', 'smart-login-registration'); ?>">
+                                    placeholder="<?php _e('Phone Number', 'smart-login-registration'); ?>" required>
                             </div>
 
                             <div class="slr-form-group">
