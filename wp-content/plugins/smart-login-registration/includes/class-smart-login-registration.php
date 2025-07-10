@@ -16,11 +16,13 @@ class SmartLoginRegistration {
     
     private $otp_handler;
     private $ajax_handlers;
+    private $user_handler;
     private $settings;
     
     public function __construct() {
         $this->otp_handler = new SLR_OTP_Handler();
         $this->ajax_handlers = new SLR_AJAX_Handlers();
+        $this->user_handler = new SLR_User_Handler();
         $this->settings = get_option('slr_settings', array());
         
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));

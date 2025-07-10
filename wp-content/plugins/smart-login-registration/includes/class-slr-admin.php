@@ -19,6 +19,13 @@ class SLR_Admin {
         add_action('admin_init', array($this, 'admin_init'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_filter('plugin_action_links_' . SLR_PLUGIN_BASENAME, array($this, 'add_settings_link'));
+        
+        // Handle AJAX requests for phone migration
+        add_action('wp_ajax_slr_migrate_phone_numbers', array($this, 'migrate_phone_numbers_to_woocommerce'));
+
+        
+        // Add admin notices
+        add_action('admin_notices', array($this, 'phone_migration_notice'));
     }
     
     /**
@@ -77,14 +84,7 @@ class SLR_Admin {
             'slr_settings',
             'slr_general_section'
         );
-        
-        add_settings_field(
-            'enable_debug',
-            __('Enable Debug Logging', 'smart-login-registration'),
-            array($this, 'enable_debug_callback'),
-            'slr_settings',
-            'slr_general_section'
-        );
+
         
         // OTP settings fields
         add_settings_field(
@@ -261,13 +261,7 @@ class SLR_Admin {
         echo '<input type="checkbox" name="slr_settings[phone_required]" value="1" ' . checked(1, $value, false) . ' />';
         echo '<label>' . __('Make phone number required during registration', 'smart-login-registration') . '</label>';
     }
-    
-    public function enable_debug_callback() {
-        $options = get_option('slr_settings');
-        $value = isset($options['enable_debug']) ? $options['enable_debug'] : false;
-        echo '<input type="checkbox" name="slr_settings[enable_debug]" value="1" ' . checked(1, $value, false) . ' />';
-        echo '<label>' . __('Enable debug logging for troubleshooting', 'smart-login-registration') . '</label>';
-    }
+
     
     public function otp_expiry_callback() {
         $options = get_option('slr_settings');
@@ -298,5 +292,91 @@ class SLR_Admin {
         $value = isset($options['max_attempts']) ? $options['max_attempts'] : 5;
         echo '<input type="number" name="slr_settings[max_attempts]" value="' . esc_attr($value) . '" min="3" max="10" />';
         echo '<p class="description">' . __('Maximum failed OTP verification attempts before blocking.', 'smart-login-registration') . '</p>';
+    }
+    
+    /**
+     * Migrate existing phone numbers to WooCommerce fields
+     */
+    public function migrate_phone_numbers_to_woocommerce() {
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Insufficient permissions'));
+            return;
+        }
+        
+        check_ajax_referer('slr_migrate_phones', 'nonce');
+        
+        // Get all users with phone meta
+        $users_with_phones = get_users(array(
+            'meta_key' => 'phone',
+            'meta_compare' => 'EXISTS'
+        ));
+        
+        $updated_count = 0;
+        $user_handler = new SLR_User_Handler();
+        
+        foreach ($users_with_phones as $user) {
+            $phone = get_user_meta($user->ID, 'phone', true);
+            
+            if (!empty($phone)) {
+                // Check if WooCommerce billing_phone already exists
+                $existing_billing_phone = get_user_meta($user->ID, 'billing_phone', true);
+                
+                if (empty($existing_billing_phone)) {
+                    // Update WooCommerce fields
+                    update_user_meta($user->ID, 'billing_phone', $phone);
+                    
+                    if (class_exists('WooCommerce')) {
+                        update_user_meta($user->ID, 'shipping_phone', $phone);
+                    }
+                    
+                    $updated_count++;
+                }
+            }
+        }
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('%d user phone numbers migrated to WooCommerce successfully.', 'smart-login-registration'), $updated_count),
+            'updated_count' => $updated_count
+        ));
+    }
+    
+    /**
+     * Show admin notice for phone migration if needed
+     */
+    public function phone_migration_notice() {
+        // Only show on users page and plugin settings page
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->id, array('users', 'settings_page_smart-login-registration'))) {
+            return;
+        }
+        
+        // Check if there are users with phone numbers but no WooCommerce billing phone
+        global $wpdb;
+        $users_needing_migration = $wpdb->get_var("
+            SELECT COUNT(DISTINCT um1.user_id) 
+            FROM {$wpdb->usermeta} um1 
+            LEFT JOIN {$wpdb->usermeta} um2 ON um1.user_id = um2.user_id AND um2.meta_key = 'billing_phone'
+            WHERE um1.meta_key = 'phone' 
+            AND um1.meta_value != '' 
+            AND (um2.meta_value IS NULL OR um2.meta_value = '')
+        ");
+        
+        if ($users_needing_migration > 0 && class_exists('WooCommerce')) {
+            ?>
+            <div class="notice notice-info is-dismissible">
+                <p>
+                    <strong><?php _e('Smart Login & Registration:', 'smart-login-registration'); ?></strong>
+                    <?php 
+                    printf(
+                        __('Found %d users with phone numbers that can be migrated to WooCommerce format. <a href="%s">Go to plugin settings</a> to migrate them.', 'smart-login-registration'),
+                        $users_needing_migration,
+                        admin_url('options-general.php?page=smart-login-registration')
+                    );
+                    ?>
+                </p>
+            </div>
+            <?php
+        }
     }
 }
