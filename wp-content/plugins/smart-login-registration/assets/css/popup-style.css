@@ -261,6 +261,7 @@
 .slr-btn-secondary:hover {
   background: #e9ecef;
   border-color: #adb5bd;
+  color: #000;
 }
 
 .slr-popup-btn:disabled {
