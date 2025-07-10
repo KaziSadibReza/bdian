@@ -210,11 +210,11 @@ class SLR_OTP_Handler {
         // Add HTML formatting
         $html_message = sprintf(
             '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="color: #007cba; text-align: center;">%s</h2>
+                <h2 style="color: #008036; text-align: center;">%s</h2>
                 <p style="font-size: 16px; line-height: 1.6;">%s</p>
                 <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 4px; margin: 20px 0;">
                     <h3 style="color: #333; margin: 0 0 10px 0;">Your OTP Code</h3>
-                    <div style="font-size: 32px; font-weight: bold; color: #007cba; letter-spacing: 4px; font-family: monospace;">%s</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #008036; letter-spacing: 4px; font-family: monospace;">%s</div>
                 </div>
                 <p style="font-size: 14px; color: #666; text-align: center;">This code will expire in %d minutes.</p>
                 <p style="font-size: 12px; color: #999; text-align: center;">If you did not request this code, please ignore this email.</p>
