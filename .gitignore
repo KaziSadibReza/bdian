@@ -4,16 +4,21 @@ wp-includes/
 *.php
 !wp-content/
 
-# Keep wp-content but ignore some folders
+# Keep wp-content but ignore cache and temporary folders
 wp-content/uploads/
 wp-content/cache/
 wp-content/upgrade/
 wp-content/backup*/
 wp-content/advanced-cache.php
 wp-content/wp-cache-config.php
+wp-content/litespeed/
+wp-content/webp-express/
+wp-content/.litespeed_conf.dat
+wp-content/languages/
 
 # Keep themes (including your Kadence child theme)
 !wp-content/themes/
+wp-content/themes/*
 !wp-content/themes/kadence-child/
 !wp-content/themes/kadence-child/**
 
