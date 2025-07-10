@@ -1,6 +1,20 @@
 <?php
 /**
- * Smart Login and Registration - Admin Class
+ * S    public function __construct() {
+        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_init', array($this, 'settings_init'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_filter('plugin_action_links_' . SLR_PLUGIN_BASENAME, array($this, 'add_settings_link'));
+        
+        // Handle AJAX requests for phone migration
+        add_action('wp_ajax_slr_migrate_phones', array($this, 'migrate_phone_numbers_to_woocommerce'));
+
+        // Add test migration hook
+        add_action('admin_init', array($this, 'test_migration'));
+        
+        // Add admin notices
+        add_action('admin_notices', array($this, 'phone_migration_notice'));
+    }d Registration - Admin Class
  * 
  * @package SmartLoginRegistration
  * @author Kazi Sadib Reza
@@ -21,7 +35,7 @@ class SLR_Admin {
         add_filter('plugin_action_links_' . SLR_PLUGIN_BASENAME, array($this, 'add_settings_link'));
         
         // Handle AJAX requests for phone migration
-        add_action('wp_ajax_slr_migrate_phone_numbers', array($this, 'migrate_phone_numbers_to_woocommerce'));
+        add_action('wp_ajax_slr_migrate_phones', array($this, 'migrate_phone_numbers_to_woocommerce'));
 
         
         // Add admin notices
@@ -421,6 +435,10 @@ class SLR_Admin {
                     <?php _e('Migrate Phone Numbers', 'smart-login-registration'); ?>
                 </button>
                 
+                <a href="<?php echo admin_url('options-general.php?page=smart-login-registration&slr_test_migration=1'); ?>" class="button button-secondary" style="margin-left: 10px;">
+                    <?php _e('Test Migration', 'smart-login-registration'); ?>
+                </a>
+                
                 <div id="slr-migration-status" style="margin-top: 10px;"></div>
                 
                 <script type="text/javascript">
@@ -432,26 +450,34 @@ class SLR_Admin {
                         button.prop('disabled', true).text('<?php _e('Migrating...', 'smart-login-registration'); ?>');
                         status.html('<p style="color: #0073aa;"><?php _e('Migration in progress...', 'smart-login-registration'); ?></p>');
                         
+                        // Ensure ajaxurl is available
+                        var ajax_url = typeof ajaxurl !== 'undefined' ? ajaxurl : '<?php echo admin_url('admin-ajax.php'); ?>';
+                        
                         $.ajax({
-                            url: ajaxurl,
+                            url: ajax_url,
                             type: 'POST',
+                            dataType: 'json',
                             data: {
                                 action: 'slr_migrate_phones',
                                 nonce: '<?php echo wp_create_nonce('slr_migrate_phones'); ?>'
                             },
                             success: function(response) {
-                                if (response.success) {
+                                console.log('Migration response:', response);
+                                if (response && response.success) {
                                     status.html('<p style="color: #00a32a;">' + response.data.message + '</p>');
                                     setTimeout(function() {
                                         location.reload();
                                     }, 2000);
                                 } else {
-                                    status.html('<p style="color: #d63638;"><?php _e('Migration failed: ', 'smart-login-registration'); ?>' + response.data.message + '</p>');
+                                    var error_msg = response && response.data && response.data.message ? response.data.message : 'Unknown error';
+                                    status.html('<p style="color: #d63638;"><?php _e('Migration failed: ', 'smart-login-registration'); ?>' + error_msg + '</p>');
                                     button.prop('disabled', false).text('<?php _e('Migrate Phone Numbers', 'smart-login-registration'); ?>');
                                 }
                             },
-                            error: function() {
-                                status.html('<p style="color: #d63638;"><?php _e('Migration failed: Network error', 'smart-login-registration'); ?></p>');
+                            error: function(xhr, status, error) {
+                                console.log('AJAX Error:', xhr, status, error);
+                                console.log('Response Text:', xhr.responseText);
+                                status.html('<p style="color: #d63638;"><?php _e('Migration failed: Network error - ', 'smart-login-registration'); ?>' + error + '</p>');
                                 button.prop('disabled', false).text('<?php _e('Migrate Phone Numbers', 'smart-login-registration'); ?>');
                             }
                         });
@@ -460,6 +486,36 @@ class SLR_Admin {
                 </script>
             </div>
             <?php
+        }
+    }
+    
+    /**
+     * Test migration method (for debugging)
+     */
+    public function test_migration() {
+        if (isset($_GET['slr_test_migration']) && current_user_can('manage_options')) {
+            // Simple test migration
+            $user_id = get_current_user_id();
+            
+            // Set test phone number in original field
+            update_user_meta($user_id, 'phone', '01234567890');
+            
+            // Run migration
+            update_user_meta($user_id, 'phone_number', '01234567890');
+            update_user_meta($user_id, 'billing_phone', '01234567890');
+            
+            if (class_exists('WooCommerce')) {
+                update_user_meta($user_id, 'shipping_phone', '01234567890');
+            }
+            
+            wp_redirect(admin_url('options-general.php?page=smart-login-registration&migrated=1'));
+            exit;
+        }
+        
+        if (isset($_GET['migrated'])) {
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-success is-dismissible"><p>Test migration completed successfully!</p></div>';
+            });
         }
     }
 }
