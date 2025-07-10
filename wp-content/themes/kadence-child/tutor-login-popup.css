@@ -1,0 +1,781 @@
+/* Tutor Login Popup Styles - Inspired by Easy Login WooCommerce */
+
+.tutor-login-popup-btn {
+  background: #007cba;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.tutor-login-popup-btn:hover {
+  background: #005a87;
+  transform: translateY(-1px);
+}
+
+/* Popup Container */
+.tutor-popup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999999;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tutor-popup-container.active {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tutor-popup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.tutor-popup-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.tutor-popup-container.active .tutor-popup-modal {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.tutor-popup-inner {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tutor-popup-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.tutor-popup-close:hover {
+  color: #e63030;
+  transform: scale(1.1);
+}
+
+.tutor-popup-content {
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tab Navigation */
+.tutor-popup-tabs {
+  border-bottom: 1px solid #eee;
+}
+
+.tutor-popup-tab-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.tutor-popup-tab-nav li {
+  flex: 1;
+  text-align: center;
+}
+
+.tutor-popup-tab-nav a {
+  display: block;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tutor-popup-tab-nav li.active a {
+  color: #007cba;
+  border-bottom: 2px solid #007cba;
+}
+
+.tutor-popup-tab-nav a:hover {
+  color: #007cba;
+  background: #f8f9fa;
+}
+
+/* Tab Content */
+.tutor-popup-tab-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.tutor-tab-pane {
+  display: none;
+}
+
+.tutor-tab-pane.active {
+  display: block;
+}
+
+.tutor-popup-form-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.tutor-popup-form-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
+}
+
+.tutor-popup-form-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Form Styles */
+.tutor-form-group {
+  margin-bottom: 20px;
+}
+
+.tutor-form-group input[type="text"],
+.tutor-form-group input[type="email"],
+.tutor-form-group input[type="password"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.tutor-form-group input:focus {
+  outline: none;
+  border-color: #007cba;
+  box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
+}
+
+.tutor-checkbox-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.tutor-checkbox-group label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.tutor-checkbox-group input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.tutor-forgot-password {
+  color: #007cba;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.tutor-forgot-password:hover {
+  color: #005a87;
+}
+
+.tutor-popup-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  display: block;
+}
+
+.tutor-btn-primary {
+  background: #007cba;
+  color: #fff;
+}
+
+.tutor-btn-primary:hover {
+  background: #005a87;
+  transform: translateY(-1px);
+}
+
+.tutor-btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Response Messages */
+.tutor-login-response,
+.tutor-register-response {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  display: none;
+}
+
+.tutor-login-response.success,
+.tutor-register-response.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.tutor-login-response.error,
+.tutor-register-response.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Loading State */
+.tutor-popup-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.tutor-popup-btn.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tutor-popup-modal {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  .tutor-popup-tab-content {
+    padding: 20px;
+  }
+
+  .tutor-popup-form-header h3 {
+    font-size: 20px;
+  }
+
+  .tutor-checkbox-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tutor-popup-tab-nav a {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .tutor-popup-tab-content {
+    padding: 15px;
+  }
+}
+
+/* Animation for smooth transitions */
+.tutor-popup-container {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Additional styling for better UX */
+.tutor-form-group input::placeholder {
+  color: #999;
+}
+
+.tutor-popup-modal {
+  backdrop-filter: blur(10px);
+}
+
+.tutor-popup-close {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+}
+
+/* Phone number validation styles */
+.tutor-form-group input.invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.phone-validation {
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+  font-weight: 500;
+}
+
+.tutor-form-group input.invalid + .phone-validation {
+  color: #dc3545;
+}
+
+.tutor-form-group input.valid + .phone-validation {
+  color: #28a745;
+}
+
+/* Phone input specific styling */
+.tutor-form-group input[type="tel"] {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.tutor-form-group input[type="tel"]:focus {
+  outline: none;
+  border-color: #007cba;
+  box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
+}
+
+/* Validation success state */
+.tutor-form-group input.valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+/* Forgot password specific styling */
+.tutor-forgot-response {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  display: none;
+}
+
+.tutor-forgot-response.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.tutor-forgot-response.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.tutor-back-to-login {
+  color: #007cba;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.tutor-back-to-login:hover {
+  color: #005a87;
+  text-decoration: underline;
+}
+
+/* Tab nav styling for forgot password */
+.tutor-popup-tab-nav {
+  justify-content: center;
+}
+
+.tutor-popup-tab-nav li {
+  min-width: 80px;
+}
+
+/* Hide forgot password tab initially */
+.tutor-popup-tab-nav a[data-tab="forgot"] {
+  display: none;
+}
+
+/* Show forgot password tab when needed */
+.tutor-popup-container.show-forgot .tutor-popup-tab-nav a[data-tab="forgot"] {
+  display: block;
+}
+
+/* OTP Specific Styles */
+.tutor-login-divider {
+  position: relative;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.tutor-login-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.tutor-login-divider span {
+  background: #fff;
+  padding: 0 15px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tutor-btn-secondary {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.tutor-btn-secondary:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.tutor-otp-input-group {
+  position: relative;
+}
+
+.tutor-otp-input-group input {
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 8px;
+  font-weight: bold;
+  font-family: monospace;
+  padding: 15px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+}
+
+.tutor-otp-input-group input:focus {
+  border-color: #007cba;
+  box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+}
+
+.tutor-otp-resend {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.tutor-otp-resend p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.tutor-resend-otp-btn {
+  background: none;
+  border: none;
+  color: #007cba;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.tutor-resend-otp-btn:hover:not(:disabled) {
+  color: #005a87;
+}
+
+.tutor-resend-otp-btn:disabled {
+  color: #999;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* OTP Success/Error States */
+.tutor-otp-verify-response.success,
+.tutor-otp-login-response.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 15px 0;
+}
+
+.tutor-otp-verify-response.error,
+.tutor-otp-login-response.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 15px 0;
+}
+
+/* OTP Form Enhancements */
+#tutor-otp-verify-tab .tutor-popup-form-header p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+#tutor-otp-login-tab .tutor-popup-form-header p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+/* Loading States */
+.tutor-popup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile Responsive for OTP */
+@media (max-width: 480px) {
+  .tutor-otp-input-group input {
+    font-size: 18px;
+    letter-spacing: 4px;
+    padding: 12px;
+  }
+
+  .tutor-login-divider span {
+    font-size: 11px;
+  }
+}
+
+/* Animation for OTP tabs */
+.tutor-tab-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* OTP Input Focus Enhancement */
+.tutor-otp-input-group input:focus {
+  outline: none;
+  border-color: #007cba;
+  box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+}
+
+/* Success checkmark animation */
+.tutor-otp-verify-response.success::before {
+  content: "✓ ";
+  color: #28a745;
+  font-weight: bold;
+}
+
+.tutor-otp-login-response.success::before {
+  content: "✓ ";
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Error icon */
+.tutor-otp-verify-response.error::before {
+  content: "✗ ";
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.tutor-otp-login-response.error::before {
+  content: "✗ ";
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Email Validation Styles */
+.tutor-form-group input.invalid {
+  border-color: #dc3545;
+}
+
+.tutor-form-group input.valid {
+  border-color: #28a745;
+}
+
+.email-validation {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* OTP Input Auto-submit feedback */
+.tutor-otp-input-group.submitting input {
+  background-color: #f8f9fa;
+  border-color: #007cba;
+}
+
+.tutor-otp-input-group.submitting::after {
+  content: "Verifying...";
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #007cba;
+  font-weight: 500;
+}
+
+/* Enhanced button states */
+.tutor-popup-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.tutor-popup-btn.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Improved tab navigation visibility */
+.tutor-popup-tab-nav li.active a {
+  color: #007cba;
+  border-bottom: 2px solid #007cba;
+}
+
+.tutor-popup-tab-nav a {
+  transition: all 0.3s ease;
+}
+
+.tutor-popup-tab-nav a:hover {
+  color: #007cba;
+}
+
+/* Better focus states */
+.tutor-form-group input:focus {
+  outline: none;
+  border-color: #007cba;
+  box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+}
+
+/* Success/Error message improvements */
+.tutor-otp-verify-response,
+.tutor-otp-login-response,
+.tutor-login-response,
+.tutor-register-response,
+.tutor-forgot-response {
+  padding: 12px;
+  border-radius: 4px;
+  margin: 15px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: all 0.3s ease;
+}
+
+.tutor-otp-verify-response.success,
+.tutor-otp-login-response.success,
+.tutor-login-response.success,
+.tutor-register-response.success,
+.tutor-forgot-response.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.tutor-otp-verify-response.error,
+.tutor-otp-login-response.error,
+.tutor-login-response.error,
+.tutor-register-response.error,
+.tutor-forgot-response.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
+  .tutor-popup-modal {
+    width: 95%;
+    max-width: 95%;
+    margin: 20px auto;
+  }
+
+  .tutor-otp-input-group input {
+    font-size: 20px;
+    letter-spacing: 6px;
+  }
+
+  .tutor-login-divider span {
+    font-size: 11px;
+    padding: 0 10px;
+  }
+}
