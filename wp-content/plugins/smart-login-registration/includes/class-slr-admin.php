@@ -188,6 +188,8 @@ class SLR_Admin {
                         <?php $this->display_stats(); ?>
                     </div>
                     
+                    <?php $this->display_migration_tool(); ?>
+                    
                     <div class="slr-admin-widget">
                         <h3><?php _e('Support', 'smart-login-registration'); ?></h3>
                         <p><?php _e('Need help? Contact the developer:', 'smart-login-registration'); ?></p>
@@ -319,24 +321,36 @@ class SLR_Admin {
             $phone = get_user_meta($user->ID, 'phone', true);
             
             if (!empty($phone)) {
-                // Check if WooCommerce billing_phone already exists
+                // Check if fields already exist
                 $existing_billing_phone = get_user_meta($user->ID, 'billing_phone', true);
+                $existing_tutor_phone = get_user_meta($user->ID, 'phone_number', true);
                 
+                $needs_update = false;
+                
+                // Update WooCommerce billing phone if empty
                 if (empty($existing_billing_phone)) {
-                    // Update WooCommerce fields
                     update_user_meta($user->ID, 'billing_phone', $phone);
+                    $needs_update = true;
                     
                     if (class_exists('WooCommerce')) {
                         update_user_meta($user->ID, 'shipping_phone', $phone);
                     }
-                    
+                }
+                
+                // Update Tutor phone_number if empty
+                if (empty($existing_tutor_phone)) {
+                    update_user_meta($user->ID, 'phone_number', $phone);
+                    $needs_update = true;
+                }
+                
+                if ($needs_update) {
                     $updated_count++;
                 }
             }
         }
         
         wp_send_json_success(array(
-            'message' => sprintf(__('%d user phone numbers migrated to WooCommerce successfully.', 'smart-login-registration'), $updated_count),
+            'message' => sprintf(__('%d user phone numbers migrated successfully to WooCommerce and Tutor LMS.', 'smart-login-registration'), $updated_count),
             'updated_count' => $updated_count
         ));
     }
@@ -351,15 +365,16 @@ class SLR_Admin {
             return;
         }
         
-        // Check if there are users with phone numbers but no WooCommerce billing phone
+        // Check if there are users with phone numbers but missing WooCommerce or Tutor fields
         global $wpdb;
         $users_needing_migration = $wpdb->get_var("
             SELECT COUNT(DISTINCT um1.user_id) 
             FROM {$wpdb->usermeta} um1 
             LEFT JOIN {$wpdb->usermeta} um2 ON um1.user_id = um2.user_id AND um2.meta_key = 'billing_phone'
+            LEFT JOIN {$wpdb->usermeta} um3 ON um1.user_id = um3.user_id AND um3.meta_key = 'phone_number'
             WHERE um1.meta_key = 'phone' 
             AND um1.meta_value != '' 
-            AND (um2.meta_value IS NULL OR um2.meta_value = '')
+            AND ((um2.meta_value IS NULL OR um2.meta_value = '') OR (um3.meta_value IS NULL OR um3.meta_value = ''))
         ");
         
         if ($users_needing_migration > 0 && class_exists('WooCommerce')) {
@@ -369,12 +384,80 @@ class SLR_Admin {
                     <strong><?php _e('Smart Login & Registration:', 'smart-login-registration'); ?></strong>
                     <?php 
                     printf(
-                        __('Found %d users with phone numbers that can be migrated to WooCommerce format. <a href="%s">Go to plugin settings</a> to migrate them.', 'smart-login-registration'),
+                        __('Found %d users with phone numbers that can be migrated to WooCommerce and Tutor LMS format. <a href="%s">Go to plugin settings</a> to migrate them.', 'smart-login-registration'),
                         $users_needing_migration,
                         admin_url('options-general.php?page=smart-login-registration')
                     );
                     ?>
                 </p>
+            </div>
+            <?php
+        }
+    }
+    
+    /**
+     * Display migration tool widget
+     */
+    private function display_migration_tool() {
+        // Check if there are users needing migration
+        global $wpdb;
+        $users_needing_migration = $wpdb->get_var("
+            SELECT COUNT(DISTINCT um1.user_id) 
+            FROM {$wpdb->usermeta} um1 
+            LEFT JOIN {$wpdb->usermeta} um2 ON um1.user_id = um2.user_id AND um2.meta_key = 'billing_phone'
+            LEFT JOIN {$wpdb->usermeta} um3 ON um1.user_id = um3.user_id AND um3.meta_key = 'phone_number'
+            WHERE um1.meta_key = 'phone' 
+            AND um1.meta_value != '' 
+            AND ((um2.meta_value IS NULL OR um2.meta_value = '') OR (um3.meta_value IS NULL OR um3.meta_value = ''))
+        ");
+
+        if ($users_needing_migration > 0 && class_exists('WooCommerce')) {
+            ?>
+            <div class="slr-admin-widget">
+                <h3><?php _e('Phone Number Migration', 'smart-login-registration'); ?></h3>
+                <p><?php printf(__('Found %d users with phone numbers that can be migrated to WooCommerce and Tutor LMS format.', 'smart-login-registration'), $users_needing_migration); ?></p>
+                
+                <button type="button" id="slr-migrate-phones" class="button button-primary">
+                    <?php _e('Migrate Phone Numbers', 'smart-login-registration'); ?>
+                </button>
+                
+                <div id="slr-migration-status" style="margin-top: 10px;"></div>
+                
+                <script type="text/javascript">
+                jQuery(document).ready(function($) {
+                    $('#slr-migrate-phones').on('click', function() {
+                        var button = $(this);
+                        var status = $('#slr-migration-status');
+                        
+                        button.prop('disabled', true).text('<?php _e('Migrating...', 'smart-login-registration'); ?>');
+                        status.html('<p style="color: #0073aa;"><?php _e('Migration in progress...', 'smart-login-registration'); ?></p>');
+                        
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'slr_migrate_phones',
+                                nonce: '<?php echo wp_create_nonce('slr_migrate_phones'); ?>'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    status.html('<p style="color: #00a32a;">' + response.data.message + '</p>');
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 2000);
+                                } else {
+                                    status.html('<p style="color: #d63638;"><?php _e('Migration failed: ', 'smart-login-registration'); ?>' + response.data.message + '</p>');
+                                    button.prop('disabled', false).text('<?php _e('Migrate Phone Numbers', 'smart-login-registration'); ?>');
+                                }
+                            },
+                            error: function() {
+                                status.html('<p style="color: #d63638;"><?php _e('Migration failed: Network error', 'smart-login-registration'); ?></p>');
+                                button.prop('disabled', false).text('<?php _e('Migrate Phone Numbers', 'smart-login-registration'); ?>');
+                            }
+                        });
+                    });
+                });
+                </script>
             </div>
             <?php
         }
