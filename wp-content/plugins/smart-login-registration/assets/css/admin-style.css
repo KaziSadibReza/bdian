@@ -1,0 +1,144 @@
+/* Smart Login and Registration - Admin Styles */
+
+.slr-admin-header {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.slr-admin-header h2 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.slr-admin-header p {
+  margin: 0;
+  color: #666;
+}
+
+.slr-admin-content {
+  display: flex;
+  gap: 20px;
+}
+
+.slr-admin-main {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.slr-admin-sidebar {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.slr-admin-widget {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.slr-admin-widget h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.slr-admin-widget h4 {
+  margin: 15px 0 10px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.slr-admin-widget ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.slr-admin-widget li {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.slr-admin-widget code {
+  background: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #e83e8c;
+}
+
+.slr-admin-widget p code {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+}
+
+/* Form styles */
+.form-table th {
+  width: 200px;
+  padding: 15px 10px 15px 0;
+  font-weight: 600;
+}
+
+.form-table td {
+  padding: 15px 10px;
+}
+
+.form-table input[type="number"] {
+  width: 80px;
+}
+
+.form-table select {
+  min-width: 150px;
+}
+
+.form-table p.description {
+  margin: 5px 0 0 0;
+  font-style: italic;
+  color: #666;
+}
+
+/* Settings sections */
+h2.hndle {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.form-table {
+  margin-bottom: 30px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .slr-admin-content {
+    flex-direction: column;
+  }
+
+  .slr-admin-sidebar {
+    width: 100%;
+  }
+
+  .form-table th,
+  .form-table td {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+  }
+
+  .form-table th {
+    font-weight: 600;
+    border-bottom: none;
+  }
+}

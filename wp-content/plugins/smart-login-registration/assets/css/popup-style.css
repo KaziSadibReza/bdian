@@ -1,0 +1,482 @@
+/* Smart Login and Registration Popup Styles */
+
+.slr-login-popup-btn {
+  background: #007cba;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.slr-login-popup-btn:hover {
+  background: #005a87;
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* Popup Container */
+.slr-popup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999999;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.slr-popup-container.active {
+  visibility: visible;
+  opacity: 1;
+}
+
+.slr-popup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.slr-popup-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.slr-popup-container.active .slr-popup-modal {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.slr-popup-inner {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.slr-popup-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.slr-popup-close:hover {
+  color: #e63030;
+  transform: scale(1.1);
+}
+
+.slr-popup-content {
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tab Navigation */
+.slr-popup-tabs {
+  border-bottom: 1px solid #eee;
+}
+
+.slr-popup-tab-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.slr-popup-tab-nav li {
+  flex: 1;
+  text-align: center;
+}
+
+.slr-popup-tab-nav a {
+  display: block;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.slr-popup-tab-nav li.active a {
+  color: #007cba;
+  border-bottom: 2px solid #007cba;
+}
+
+.slr-popup-tab-nav a:hover {
+  color: #007cba;
+  background: #f8f9fa;
+}
+
+/* Tab Content */
+.slr-popup-tab-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.slr-tab-pane {
+  display: none;
+}
+
+.slr-tab-pane.active {
+  display: block;
+}
+
+.slr-popup-form-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.slr-popup-form-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
+}
+
+.slr-popup-form-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Form Styles */
+.slr-form-group {
+  margin-bottom: 20px;
+}
+
+.slr-form-group input[type="text"],
+.slr-form-group input[type="email"],
+.slr-form-group input[type="tel"],
+.slr-form-group input[type="password"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.slr-form-group input:focus {
+  outline: none;
+  border-color: #007cba;
+  box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
+}
+
+.slr-checkbox-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.slr-checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.slr-checkbox-group input[type="checkbox"] {
+  margin: 0;
+}
+
+.slr-forgot-password {
+  color: #007cba;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.slr-forgot-password:hover {
+  color: #005a87;
+}
+
+.slr-popup-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.slr-btn-primary {
+  background: #007cba;
+  color: #fff;
+}
+
+.slr-btn-primary:hover {
+  background: #005a87;
+  transform: translateY(-1px);
+}
+
+.slr-btn-secondary {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.slr-btn-secondary:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.slr-popup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.slr-popup-btn.loading {
+  color: transparent;
+}
+
+.slr-popup-btn.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Login Divider */
+.slr-login-divider {
+  text-align: center;
+  position: relative;
+  margin: 25px 0;
+}
+
+.slr-login-divider span {
+  background: #fff;
+  color: #999;
+  padding: 0 15px;
+  font-size: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.slr-login-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #eee;
+}
+
+/* Response Messages */
+.slr-login-response,
+.slr-register-response,
+.slr-forgot-response,
+.slr-otp-login-response,
+.slr-otp-verify-response {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: none;
+}
+
+.slr-login-response.success,
+.slr-register-response.success,
+.slr-forgot-response.success,
+.slr-otp-login-response.success,
+.slr-otp-verify-response.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.slr-login-response.error,
+.slr-register-response.error,
+.slr-forgot-response.error,
+.slr-otp-login-response.error,
+.slr-otp-verify-response.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* OTP Specific Styles */
+.slr-otp-input-group {
+  text-align: center;
+}
+
+.slr-otp-input-group input {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.slr-otp-resend {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.slr-otp-resend p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.slr-resend-otp-btn {
+  background: none;
+  border: none;
+  color: #007cba;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.slr-resend-otp-btn:hover {
+  color: #005a87;
+}
+
+.slr-resend-otp-btn:disabled {
+  color: #999;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.slr-back-to-login {
+  color: #007cba;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.slr-back-to-login:hover {
+  color: #005a87;
+}
+
+.slr-otp-login-btn {
+  margin-top: 10px;
+}
+
+/* Validation Styles */
+.slr-form-group input.invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.slr-form-group input.valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+.phone-validation {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .slr-popup-modal {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  .slr-popup-tab-content {
+    padding: 20px;
+  }
+
+  .slr-popup-form-header h3 {
+    font-size: 20px;
+  }
+
+  .slr-popup-tab-nav a {
+    padding: 12px 15px;
+    font-size: 14px;
+  }
+
+  .slr-form-group input[type="text"],
+  .slr-form-group input[type="email"],
+  .slr-form-group input[type="tel"],
+  .slr-form-group input[type="password"] {
+    padding: 10px 14px;
+  }
+
+  .slr-popup-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .slr-popup-modal {
+    max-width: 100%;
+    margin: 10px;
+    border-radius: 0;
+  }
+
+  .slr-popup-tab-content {
+    padding: 15px;
+  }
+
+  .slr-checkbox-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

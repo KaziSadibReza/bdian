@@ -1,0 +1,15 @@
+# Ignore everything
+*
+
+# Unignore the things we want
+!.gitignore
+
+# Unignore wp-content and subfolders
+!wp-content/
+!wp-content/plugins/
+!wp-content/plugins/smart-login-registration/
+!wp-content/plugins/smart-login-registration/**
+
+# Exclude all other plugins
+wp-content/plugins/*
+!wp-content/plugins/smart-login-registration/
