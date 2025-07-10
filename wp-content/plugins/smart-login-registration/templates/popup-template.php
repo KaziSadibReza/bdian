@@ -21,15 +21,25 @@ if (!defined('ABSPATH')) {
     <div class="slr-popup-overlay"></div>
     <div class="slr-popup-modal">
         <div class="slr-popup-inner">
-            <span class="slr-popup-close">&times;</span>
+            <span class="slr-popup-close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </span>
             <div class="slr-popup-content">
                 <div class="slr-popup-tabs">
                     <ul class="slr-popup-tab-nav">
-                        <li class="active"><a href="#slr-login-tab" data-tab="login"><?php _e('Login', 'smart-login-registration'); ?></a></li>
+                        <li class="active"><a href="#slr-login-tab"
+                                data-tab="login"><?php _e('Login', 'smart-login-registration'); ?></a></li>
                         <?php if ($atts['show_register'] === 'yes' && get_option('users_can_register')) : ?>
-                        <li><a href="#slr-register-tab" data-tab="register"><?php _e('Register', 'smart-login-registration'); ?></a></li>
+                        <li><a href="#slr-register-tab"
+                                data-tab="register"><?php _e('Register', 'smart-login-registration'); ?></a></li>
                         <?php endif; ?>
-                        <li style="display: none;"><a href="#slr-forgot-tab" data-tab="forgot"><?php _e('Forgot Password', 'smart-login-registration'); ?></a></li>
+                        <li style="display: none;"><a href="#slr-forgot-tab"
+                                data-tab="forgot"><?php _e('Forgot Password', 'smart-login-registration'); ?></a></li>
                     </ul>
                 </div>
 
@@ -45,11 +55,14 @@ if (!defined('ABSPATH')) {
                             <input type="hidden" name="action" value="slr_login">
 
                             <div class="slr-form-group">
-                                <input type="text" name="log" placeholder="<?php _e('Email, Phone or Username', 'smart-login-registration'); ?>" required>
+                                <input type="text" name="log"
+                                    placeholder="<?php _e('Email, Phone or Username', 'smart-login-registration'); ?>"
+                                    required>
                             </div>
 
                             <div class="slr-form-group">
-                                <input type="password" name="pwd" placeholder="<?php _e('Password', 'smart-login-registration'); ?>" required>
+                                <input type="password" name="pwd"
+                                    placeholder="<?php _e('Password', 'smart-login-registration'); ?>" required>
                             </div>
 
                             <div class="slr-form-group slr-checkbox-group">
@@ -86,14 +99,16 @@ if (!defined('ABSPATH')) {
                     <div id="slr-otp-login-tab" class="slr-tab-pane">
                         <div class="slr-popup-form-header">
                             <h3><?php _e('Login with OTP', 'smart-login-registration'); ?></h3>
-                            <p><?php _e('Enter your email to receive a one-time password', 'smart-login-registration'); ?></p>
+                            <p><?php _e('Enter your email to receive a one-time password', 'smart-login-registration'); ?>
+                            </p>
                         </div>
                         <form id="slr-popup-otp-login-form" method="post">
                             <?php wp_nonce_field('slr_otp_nonce', 'slr_otp_nonce'); ?>
                             <input type="hidden" name="action" value="slr_otp_login">
 
                             <div class="slr-form-group">
-                                <input type="email" name="email" placeholder="<?php _e('Email Address', 'smart-login-registration'); ?>" required>
+                                <input type="email" name="email"
+                                    placeholder="<?php _e('Email Address', 'smart-login-registration'); ?>" required>
                             </div>
 
                             <div class="slr-form-group">
@@ -126,7 +141,9 @@ if (!defined('ABSPATH')) {
 
                             <div class="slr-form-group">
                                 <div class="slr-otp-input-group">
-                                    <input type="text" name="otp" placeholder="<?php _e('000000', 'smart-login-registration'); ?>" maxlength="6" pattern="[0-9]{6}" required autocomplete="off">
+                                    <input type="text" name="otp"
+                                        placeholder="<?php _e('000000', 'smart-login-registration'); ?>" maxlength="6"
+                                        pattern="[0-9]{6}" required autocomplete="off">
                                 </div>
                             </div>
 
@@ -165,19 +182,23 @@ if (!defined('ABSPATH')) {
                             <input type="hidden" name="action" value="slr_register">
 
                             <div class="slr-form-group">
-                                <input type="text" name="first_name" placeholder="<?php _e('Full Name', 'smart-login-registration'); ?>" required>
+                                <input type="text" name="first_name"
+                                    placeholder="<?php _e('Full Name', 'smart-login-registration'); ?>" required>
                             </div>
 
                             <div class="slr-form-group">
-                                <input type="email" name="email" placeholder="<?php _e('Email Address', 'smart-login-registration'); ?>" required>
+                                <input type="email" name="email"
+                                    placeholder="<?php _e('Email Address', 'smart-login-registration'); ?>" required>
                             </div>
 
                             <div class="slr-form-group">
-                                <input type="tel" name="phone" placeholder="<?php _e('Phone Number (Optional)', 'smart-login-registration'); ?>">
+                                <input type="tel" name="phone"
+                                    placeholder="<?php _e('Phone Number (Optional)', 'smart-login-registration'); ?>">
                             </div>
 
                             <div class="slr-form-group">
-                                <input type="password" name="password" placeholder="<?php _e('Password', 'smart-login-registration'); ?>" required>
+                                <input type="password" name="password"
+                                    placeholder="<?php _e('Password', 'smart-login-registration'); ?>" required>
                             </div>
 
                             <div class="slr-form-group">
@@ -195,14 +216,17 @@ if (!defined('ABSPATH')) {
                     <div id="slr-forgot-tab" class="slr-tab-pane">
                         <div class="slr-popup-form-header">
                             <h3><?php _e('Reset Password', 'smart-login-registration'); ?></h3>
-                            <p><?php _e('Enter your email or phone number to reset your password', 'smart-login-registration'); ?></p>
+                            <p><?php _e('Enter your email or phone number to reset your password', 'smart-login-registration'); ?>
+                            </p>
                         </div>
                         <form id="slr-popup-forgot-form" method="post">
                             <?php wp_nonce_field('slr_forgot_nonce', 'slr_forgot_nonce'); ?>
                             <input type="hidden" name="action" value="slr_forgot_password">
 
                             <div class="slr-form-group">
-                                <input type="text" name="user_login" placeholder="<?php _e('Email or Phone Number', 'smart-login-registration'); ?>" required>
+                                <input type="text" name="user_login"
+                                    placeholder="<?php _e('Email or Phone Number', 'smart-login-registration'); ?>"
+                                    required>
                             </div>
 
                             <div class="slr-form-group">

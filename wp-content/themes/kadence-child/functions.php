@@ -170,7 +170,6 @@ add_filter('woocommerce_new_customer_data', function($customer_data) {
 /****************************** INCLUDE CUSTOM MODULES ******************************/
 
 // Include Tutor Login Popup functionality
-// COMMENTED OUT - Now using Smart Login and Registration Plugin instead
-// if (file_exists(get_stylesheet_directory() . '/includes/tutor-login-popup.php')) {
-//     require_once get_stylesheet_directory() . '/includes/tutor-login-popup.php';
-// }
+if (file_exists(get_stylesheet_directory() . '/includes/tutor-login-popup.php')) {
+    require_once get_stylesheet_directory() . '/includes/tutor-login-popup.php';
+}
