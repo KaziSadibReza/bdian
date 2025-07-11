@@ -1,3 +1,11 @@
+/* Mobile body scroll prevention */
+body.slr-popup-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
 /* Smart Login and Registration Popup Styles fixed*/
 
 .slr-login-popup-btn {
@@ -12,6 +20,8 @@
   transition: all 0.3s ease;
   text-decoration: none;
   display: inline-block;
+  -webkit-tap-highlight-color: rgba(0, 128, 54, 0.2);
+  touch-action: manipulation;
 }
 
 .slr-login-popup-btn:hover {
@@ -31,6 +41,9 @@
   visibility: hidden;
   opacity: 0;
   transition: all 0.3s ease;
+  /* Mobile fixes */
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
 }
 
 .slr-popup-container.active {
@@ -436,6 +449,11 @@
   .slr-popup-modal {
     max-width: 95%;
     margin: 20px;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  .slr-popup-container.active .slr-popup-modal {
+    transform: translate(-50%, -50%) scale(1);
   }
 
   .slr-popup-tab-content {
@@ -456,11 +474,20 @@
   .slr-form-group input[type="tel"],
   .slr-form-group input[type="password"] {
     padding: 10px 14px;
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 
   .slr-popup-btn {
     padding: 10px;
     font-size: 14px;
+    min-height: 44px; /* iOS touch target minimum */
+  }
+
+  /* Enhanced touch target for mobile */
+  .slr-login-popup-btn {
+    padding: 12px 24px;
+    min-height: 44px;
+    -webkit-tap-highlight-color: rgba(0, 128, 54, 0.2);
   }
 }
 
@@ -468,7 +495,8 @@
   .slr-popup-modal {
     max-width: 100%;
     margin: 10px;
-    border-radius: 0;
+    border-radius: 8px;
+    max-height: 95vh;
   }
 
   .slr-popup-tab-content {
@@ -479,5 +507,20 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  /* Ensure popup opens properly on mobile */
+  .slr-popup-container {
+    position: fixed;
+    z-index: 999999;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .slr-popup-close {
+    top: -8px;
+    right: -8px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
   }
 }

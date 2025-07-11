@@ -15,15 +15,15 @@ jQuery(document).ready(function ($) {
     },
 
     bindEvents: function () {
-      // Open popup when login button is clicked
-      $(document).on("click", ".slr-login-popup-btn", this.openPopup);
+      // Open popup when login button is clicked (with mobile support)
+      $(document).on("click touchend", ".slr-login-popup-btn", this.openPopup);
 
-      // Close popup events
-      $(document).on("click", ".slr-popup-close", this.closePopup);
-      $(document).on("click", ".slr-popup-overlay", this.closePopup);
+      // Close popup events (with mobile support)
+      $(document).on("click touchend", ".slr-popup-close", this.closePopup);
+      $(document).on("click touchend", ".slr-popup-overlay", this.closePopup);
 
-      // Tab switching
-      $(document).on("click", ".slr-popup-tab-nav a", this.switchTab);
+      // Tab switching (with mobile support)
+      $(document).on("click touchend", ".slr-popup-tab-nav a", this.switchTab);
 
       // Form submissions
       $(document).on("submit", "#slr-popup-login-form", this.handleLogin);
@@ -62,19 +62,34 @@ jQuery(document).ready(function ($) {
 
     openPopup: function (e) {
       e.preventDefault();
+      e.stopPropagation();
+
       var popup = $("#slr-login-popup-container");
+
+      // Prevent body scrolling on mobile
+      $("body").addClass("slr-popup-open");
+
       popup.show().addClass("active");
 
-      // Focus on first input
+      // Focus on first input (delayed for mobile)
       setTimeout(function () {
-        popup.find('input[name="log"]').focus();
+        var firstInput = popup.find('input[name="log"]');
+        if (firstInput.length && !/Mobi|Android/i.test(navigator.userAgent)) {
+          // Only auto-focus on non-mobile devices to prevent keyboard issues
+          firstInput.focus();
+        }
       }, 300);
     },
 
     closePopup: function (e) {
       e.preventDefault();
+      e.stopPropagation();
+
       var popup = $("#slr-login-popup-container");
       popup.removeClass("active");
+
+      // Re-enable body scrolling
+      $("body").removeClass("slr-popup-open");
 
       setTimeout(function () {
         popup.hide();
@@ -639,4 +654,7 @@ jQuery(document).ready(function ($) {
       }
     }
   });
+
+  // Initialize when DOM is ready
+  SmartLoginPopup.init();
 });
