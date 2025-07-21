@@ -188,7 +188,7 @@ jQuery(document).ready(function ($) {
 
             // Reload page after success
             setTimeout(function () {
-              window.location.reload();
+              window.location.href = "/dashboard/";
             }, 1500);
           } else {
             $response.addClass("error").text(response.data.message).show();
@@ -254,7 +254,7 @@ jQuery(document).ready(function ($) {
             } else {
               // Reload page after success
               setTimeout(function () {
-                window.location.reload();
+                window.location.href = "/dashboard/";
               }, 1500);
             }
           } else {
