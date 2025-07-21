@@ -93,9 +93,6 @@ class SmartLoginRegistrationPlugin {
         $otp_handler = new SLR_OTP_Handler();
         $otp_handler->create_otp_table();
         
-        // Configure mail settings for better deliverability
-        $otp_handler->configure_mail_settings();
-        
         // Set default options
         $default_options = array(
             'otp_expiry' => 10, // minutes

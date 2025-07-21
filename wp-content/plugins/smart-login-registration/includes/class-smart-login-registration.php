@@ -27,9 +27,6 @@ class SmartLoginRegistration {
         $this->error_handler = new SLR_Error_Handler();
         $this->settings = get_option('slr_settings', array());
         
-        // Configure mail settings for better deliverability
-        $this->otp_handler->configure_mail_settings();
-        
         $this->add_core_hooks();
     }
     
