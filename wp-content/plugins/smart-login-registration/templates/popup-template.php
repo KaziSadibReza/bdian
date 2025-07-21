@@ -131,7 +131,7 @@ if (!defined('ABSPATH')) {
                     <div id="slr-otp-verify-tab" class="slr-tab-pane">
                         <div class="slr-popup-form-header">
                             <h3><?php _e('Enter OTP Code', 'smart-login-registration'); ?></h3>
-                            <p><?php _e('We\'ve sent a 6-digit code to your email', 'smart-login-registration'); ?></p>
+                            <p><?php _e('We\'ve sent a 4-digit code to your email', 'smart-login-registration'); ?></p>
                         </div>
                         <form id="slr-popup-otp-verify-form" method="post">
                             <?php wp_nonce_field('slr_otp_nonce', 'slr_otp_nonce'); ?>
@@ -142,8 +142,8 @@ if (!defined('ABSPATH')) {
                             <div class="slr-form-group">
                                 <div class="slr-otp-input-group">
                                     <input type="text" name="otp"
-                                        placeholder="<?php _e('000000', 'smart-login-registration'); ?>" maxlength="6"
-                                        pattern="[0-9]{6}" required autocomplete="off">
+                                        placeholder="<?php _e('0000', 'smart-login-registration'); ?>" maxlength="4"
+                                        pattern="[0-9]{4}" required autocomplete="off">
                                 </div>
                             </div>
 

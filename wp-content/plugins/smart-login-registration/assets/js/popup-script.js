@@ -176,7 +176,7 @@ jQuery(document).ready(function ($) {
             $response.addClass("error").text(response.data.message).show();
           }
         },
-        error: function () {
+        error: function (xhr, status, error) {
           $response
             .addClass("error")
             .text("An error occurred. Please try again.")
@@ -393,11 +393,11 @@ jQuery(document).ready(function ($) {
 
       // Validate OTP format
       var otp = $otpInput.val();
-      if (!/^\d{6}$/.test(otp)) {
+      if (!/^\d{4}$/.test(otp)) {
         $response
           .removeClass("success")
           .addClass("error")
-          .html("Please enter a valid 6-digit OTP.")
+          .html("Please enter a valid 4-digit OTP.")
           .show();
         $otpInput.focus();
         return;
@@ -423,7 +423,12 @@ jQuery(document).ready(function ($) {
 
             // Close popup and reload page after successful verification
             setTimeout(function () {
-              SmartLoginPopup.closePopup({ preventDefault: function () {} });
+              // Close popup properly
+              var popup = $("#slr-login-popup-container");
+              popup.removeClass("active");
+              $("body").removeClass("slr-popup-open");
+
+              // Reload page immediately
               location.reload();
             }, 1500);
           } else {
@@ -601,15 +606,15 @@ jQuery(document).ready(function ($) {
     // Only allow digits
     value = value.replace(/[^0-9]/g, "");
 
-    // Limit to 6 digits
-    if (value.length > 6) {
-      value = value.substring(0, 6);
+    // Limit to 4 digits
+    if (value.length > 4) {
+      value = value.substring(0, 4);
     }
 
     $this.val(value);
 
-    // Auto-submit when 6 digits are entered
-    if (value.length === 6) {
+    // Auto-submit when 4 digits are entered
+    if (value.length === 4) {
       setTimeout(function () {
         $this.closest("form").submit();
       }, 500);
@@ -624,14 +629,14 @@ jQuery(document).ready(function ($) {
       var value = $this.val();
       // Only allow digits
       value = value.replace(/[^0-9]/g, "");
-      // Limit to 6 digits
-      if (value.length > 6) {
-        value = value.substring(0, 6);
+      // Limit to 4 digits
+      if (value.length > 4) {
+        value = value.substring(0, 4);
       }
       $this.val(value);
 
-      // Auto-submit when 6 digits are pasted
-      if (value.length === 6) {
+      // Auto-submit when 4 digits are pasted
+      if (value.length === 4) {
         setTimeout(function () {
           $this.closest("form").submit();
         }, 500);
@@ -654,7 +659,4 @@ jQuery(document).ready(function ($) {
       }
     }
   });
-
-  // Initialize when DOM is ready
-  SmartLoginPopup.init();
 });

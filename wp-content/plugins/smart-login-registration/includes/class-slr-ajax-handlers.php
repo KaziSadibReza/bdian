@@ -116,12 +116,23 @@ class SLR_AJAX_Handlers {
             }
         }
         
-        // Generate and store OTP
-        $otp = $this->otp_handler->generate_otp();
+        // Check rate limiting with high-performance caching
+        if ($this->otp_handler->is_rate_limited($email)) {
+            wp_send_json_error(array('message' => __('Too many requests. Please wait before requesting another OTP.', 'smart-login-registration')));
+        }
         
-        if (!$this->otp_handler->store_otp($email, $otp, $otp_type, $temp_data)) {
+        // Generate and store OTP with high-performance method
+        $otp_result = $this->otp_handler->store_otp($email, null, $otp_type, $temp_data);
+        
+        if (!$otp_result) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
         }
+        
+        // Increment rate limit counter efficiently
+        $this->otp_handler->increment_rate_limit($email);
+        
+        // Use the actual OTP generated
+        $otp = $otp_result;
         
         // Send OTP email
         if ($this->otp_handler->send_otp_email($email, $otp, $otp_type)) {
@@ -153,20 +164,51 @@ class SLR_AJAX_Handlers {
         $verification = $this->otp_handler->verify_otp($email, $otp, $otp_type);
         
         if (!$verification['success']) {
-            wp_send_json_error(array('message' => $verification['message']));
+            $error_data = array('message' => $verification['message']);
+            
+            // Include additional error information if available
+            if (isset($verification['error_code'])) {
+                $error_data['error_code'] = $verification['error_code'];
+            }
+            if (isset($verification['attempts_remaining'])) {
+                $error_data['attempts_remaining'] = $verification['attempts_remaining'];
+            }
+            
+            wp_send_json_error($error_data);
         }
         
         if ($otp_type === 'login') {
-            // Log in the user
+            // Log in the user with concurrency protection
             $user = get_user_by('email', $email);
             if (!$user) {
                 wp_send_json_error(array('message' => __('User not found.', 'smart-login-registration')));
             }
             
+            // Check for concurrent login attempts
+            $concurrent_check = $this->otp_handler->handle_concurrent_login($user->ID, $email);
+            if (!$concurrent_check['success']) {
+                wp_send_json_error(array('message' => $concurrent_check['message'], 'error_code' => $concurrent_check['error_code'] ?? 'CONCURRENT_LOGIN_ERROR'));
+            }
+            
+            // If already logged in, just return success
+            if (isset($concurrent_check['already_logged_in']) && $concurrent_check['already_logged_in']) {
+                wp_send_json_success(array('message' => $concurrent_check['message']));
+            }
+            
+            // Set authentication
             wp_set_current_user($user->ID);
             wp_set_auth_cookie($user->ID);
             
-            wp_send_json_success(array('message' => __('Login successful! Welcome back!', 'smart-login-registration')));
+            // Clear rate limit cache after successful login
+            wp_cache_delete("slr_rate_limit_{$email}");
+            
+            // Generate session token for additional security
+            $session_token = $this->otp_handler->generate_session_token($user->ID, $email);
+            
+            wp_send_json_success(array(
+                'message' => __('Login successful! Welcome back!', 'smart-login-registration'),
+                'session_token' => $session_token
+            ));
             
         } else if ($otp_type === 'register') {
             // Create new user with temp data
@@ -185,6 +227,9 @@ class SLR_AJAX_Handlers {
             // Auto login the user
             wp_set_current_user($user_id);
             wp_set_auth_cookie($user_id);
+            
+            // Clear rate limit cache after successful registration
+            wp_cache_delete("slr_rate_limit_{$temp_data['email']}");
             
             wp_send_json_success(array('message' => __('Registration successful! Welcome!', 'smart-login-registration')));
         }
@@ -208,12 +253,15 @@ class SLR_AJAX_Handlers {
             wp_send_json_error(array('message' => __('Too many requests. Please wait before requesting another OTP.', 'smart-login-registration')));
         }
         
-        // Generate and store new OTP (temp_data will be preserved automatically)
-        $otp = $this->otp_handler->generate_otp();
+        // Generate and store new OTP with concurrency protection (temp_data will be preserved automatically)
+        $otp_result = $this->otp_handler->store_otp($email, null, $otp_type);
         
-        if (!$this->otp_handler->store_otp($email, $otp, $otp_type)) {
+        if (!$otp_result) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
         }
+        
+        // Use the actual OTP generated (could be different due to collision handling)
+        $otp = is_string($otp_result) ? $otp_result : $this->otp_handler->generate_otp();
         
         // Send OTP email
         if ($this->otp_handler->send_otp_email($email, $otp, $otp_type)) {
@@ -246,12 +294,15 @@ class SLR_AJAX_Handlers {
             wp_send_json_error(array('message' => __('Too many requests. Please wait before requesting another OTP.', 'smart-login-registration')));
         }
         
-        // Generate and store OTP
-        $otp = $this->otp_handler->generate_otp();
+        // Generate and store OTP with concurrency protection
+        $otp_result = $this->otp_handler->store_otp($email, null, 'login');
         
-        if (!$this->otp_handler->store_otp($email, $otp, 'login')) {
+        if (!$otp_result) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
         }
+        
+        // Use the actual OTP generated (could be different due to collision handling)
+        $otp = is_string($otp_result) ? $otp_result : $this->otp_handler->generate_otp();
         
         // Send OTP email
         if ($this->otp_handler->send_otp_email($email, $otp, 'login')) {

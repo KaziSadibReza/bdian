@@ -448,7 +448,7 @@ body.slr-popup-open {
 @media (max-width: 768px) {
   .slr-popup-modal {
     max-width: 95%;
-    margin: 20px;
+    margin: auto;
     transform: translate(-50%, -50%) scale(0.9);
   }
 
@@ -494,7 +494,7 @@ body.slr-popup-open {
 @media (max-width: 480px) {
   .slr-popup-modal {
     max-width: 100%;
-    margin: 10px;
+    margin: auto;
     border-radius: 8px;
     max-height: 95vh;
   }
