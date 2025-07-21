@@ -321,53 +321,158 @@ class SLR_OTP_Handler {
     }
     
     /**
-     * Send OTP email
+     * Send OTP email with professional template
      */
     public function send_otp_email($email, $otp, $type) {
         $site_name = get_bloginfo('name');
-        $subject = sprintf(__('[%s] Your OTP Code', 'smart-login-registration'), $site_name);
+        $site_url = get_home_url();
+        $admin_email = get_option('admin_email');
+        $current_year = date('Y');
         
-        $message = '';
+        // Get OTP expiry time
         $otp_expiry = isset($this->settings['otp_expiry']) ? (int) $this->settings['otp_expiry'] : 10;
         
-        if ($type === 'login') {
-            $message = sprintf(
-                __('Your OTP code for login is: %s\n\nThis code will expire in %d minutes.\n\nIf you did not request this code, please ignore this email.', 'smart-login-registration'),
-                $otp, $otp_expiry
-            );
-        } else if ($type === 'register') {
-            $message = sprintf(
-                __('Your OTP code for registration is: %s\n\nThis code will expire in %d minutes.\n\nIf you did not request this code, please ignore this email.', 'smart-login-registration'),
-                $otp, $otp_expiry
-            );
+        // Determine email content based on type
+        $action_text = '';
+        $greeting_text = '';
+        $instruction_text = '';
+        
+        switch ($type) {
+            case 'login':
+                $action_text = __('Login Request', 'smart-login-registration');
+                $greeting_text = __('Welcome back!', 'smart-login-registration');
+                $instruction_text = __('Please use the following OTP code to complete your login:', 'smart-login-registration');
+                break;
+            case 'register':
+                $action_text = __('Account Registration', 'smart-login-registration');
+                $greeting_text = __('Welcome to %s!', 'smart-login-registration');
+                $instruction_text = __('Please use the following OTP code to complete your registration:', 'smart-login-registration');
+                break;
+            case 'forgot':
+                $action_text = __('Password Reset', 'smart-login-registration');
+                $greeting_text = __('Password Reset Request', 'smart-login-registration');
+                $instruction_text = __('Please use the following OTP code to reset your password:', 'smart-login-registration');
+                break;
+            default:
+                $action_text = __('Verification Required', 'smart-login-registration');
+                $greeting_text = __('Account Verification', 'smart-login-registration');
+                $instruction_text = __('Please use the following OTP code to verify your account:', 'smart-login-registration');
         }
         
-        // Add HTML formatting
-        $html_message = sprintf(
-            '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="color: #008036; text-align: center;">%s</h2>
-                <p style="font-size: 16px; line-height: 1.6;">%s</p>
-                <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 4px; margin: 20px 0;">
-                    <h3 style="color: #333; margin: 0 0 10px 0;">Your OTP Code</h3>
-                    <div style="font-size: 32px; font-weight: bold; color: #008036; letter-spacing: 4px; font-family: monospace;">%s</div>
-                </div>
-                <p style="font-size: 14px; color: #666; text-align: center;">This code will expire in %d minutes.</p>
-                <p style="font-size: 12px; color: #999; text-align: center;">If you did not request this code, please ignore this email.</p>
-                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-                <p style="font-size: 12px; color: #999; text-align: center;">Powered by Smart Login & Registration Plugin</p>
-            </div>',
-            $site_name,
-            $type === 'login' ? __('Please use the following OTP code to complete your login:', 'smart-login-registration') : __('Please use the following OTP code to complete your registration:', 'smart-login-registration'),
-            $otp,
-            $otp_expiry
+        // Format greeting text with site name for registration
+        if ($type === 'register') {
+            $greeting_text = sprintf($greeting_text, $site_name);
+        }
+        
+        // Email subject
+        $subject = sprintf(__('[%s] %s - Verification Code', 'smart-login-registration'), $site_name, $action_text);
+        
+        // Professional HTML email template
+        $html_message = '
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . esc_html($subject) . '</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #374151; background-color: #f9fafb; }
+        .email-container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .email-header { background: linear-gradient(90deg,rgba(0, 128, 54, 1) 0%, rgba(5, 150, 105, 1) 93%); padding: 40px 30px; text-align: center; color: white; }
+        .email-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .email-header p { font-size: 16px; opacity: 0.9; }
+        .email-body { padding: 40px 30px; }
+        .greeting { font-size: 20px; font-weight: 600; color: #111827; margin-bottom: 16px; }
+        .instruction { font-size: 16px; color: #6b7280; margin-bottom: 32px; line-height: 1.7; }
+        .otp-container { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px dashed #10b981; border-radius: 12px; padding: 30px; text-align: center; margin: 32px 0; }
+        .otp-label { font-size: 14px; font-weight: 500; color: #059669; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .otp-code { font-size: 42px; font-weight: 700; color: #047857; font-family: "Courier New", monospace; letter-spacing: 8px; margin: 16px 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .otp-expiry { font-size: 14px; color: #6b7280; margin-top: 16px; }
+        .security-notice { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 32px 0; border-radius: 0 8px 8px 0; }
+        .security-notice h3 { font-size: 16px; font-weight: 600; color: #92400e; margin-bottom: 8px; }
+        .security-notice p { font-size: 14px; color: #a16207; }
+        .email-footer { background: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb; }
+        .footer-links { margin-bottom: 20px; }
+        .footer-links a { color: #059669; text-decoration: none; margin: 0 15px; font-weight: 500; }
+        .footer-links a:hover { text-decoration: underline; }
+        .footer-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+        .btn { display: inline-block; background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
+        .btn:hover { background: #047857; }
+        @media (max-width: 600px) {
+            .email-container { margin: 20px; border-radius: 8px; }
+            .email-header { padding: 30px 20px; }
+            .email-header h1 { font-size: 24px; }
+            .email-body { padding: 30px 20px; }
+            .otp-code { font-size: 36px; letter-spacing: 6px; }
+            .email-footer { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>' . esc_html($site_name) . '</h1>
+            <p>' . esc_html($action_text) . '</p>
+        </div>
+        
+        <div class="email-body">
+            <div class="greeting">' . esc_html($greeting_text) . '</div>
+            
+            <div class="instruction">
+                ' . esc_html($instruction_text) . '
+            </div>
+            
+            <div class="otp-container">
+                <div class="otp-label">Your Verification Code</div>
+                <div class="otp-code">' . esc_html($otp) . '</div>
+                <div class="otp-expiry">⏰ This code will expire in ' . $otp_expiry . ' minutes</div>
+            </div>
+            
+            <div class="security-notice">
+                <h3>🔒 Security Notice</h3>
+                <p>For your security, never share this code with anyone. If you didn\'t request this verification code, please ignore this email or contact our support team.</p>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">
+                If you\'re having trouble, you can also visit our website directly at <a href="' . esc_url($site_url) . '" style="color: #059669;">' . esc_html($site_name) . '</a>
+            </p>
+        </div>
+        
+        <div class="email-footer">
+            <div class="footer-links">
+                <a href="' . esc_url($site_url) . '">Visit Website</a>
+                <a href="' . esc_url($site_url . '/privacy-policy') . '">Privacy Policy</a>
+            </div>
+            
+            <div class="footer-text">
+                <p><strong>' . esc_html($site_name) . '</strong></p>
+                <p>This is an automated message. Please do not reply to this email.</p>
+                <p>&copy; ' . $current_year . ' ' . esc_html($site_name) . '. All rights reserved.</p>
+                <p style="margin-top: 12px; font-size: 11px;">
+                    Powered by Smart Login & Registration Plugin
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        // Email headers
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $site_name . ' <' . $admin_email . '>',
+            'Reply-To: ' . $admin_email,
+            'X-Mailer: Smart Login Registration Plugin'
         );
         
-        $headers = array('Content-Type: text/html; charset=UTF-8');
-        
+        // Send email
         $result = wp_mail($email, $subject, $html_message, $headers);
         
+        // Debug logging
         if ($this->is_debug_enabled()) {
-            error_log("SLR: OTP email sent - Email: $email, Type: $type, Result: " . ($result ? 'Success' : 'Failed'));
+            error_log("SLR: Professional OTP email sent - Email: $email, Type: $type, Result: " . ($result ? 'Success' : 'Failed'));
         }
         
         return $result;
@@ -497,12 +602,7 @@ class SLR_OTP_Handler {
         }
     }
     
-    /**
-     * Check if debug mode is enabled
-     */
-    private function is_debug_enabled() {
-        return isset($this->settings['enable_debug']) && $this->settings['enable_debug'];
-    }
+
     
     /**
      * Handle concurrent login attempts with session protection
@@ -592,5 +692,12 @@ class SLR_OTP_Handler {
         }
         
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    }
+    
+    /**
+     * Check if debug mode is enabled
+     */
+    private function is_debug_enabled() {
+        return defined('WP_DEBUG') && WP_DEBUG;
     }
 }
