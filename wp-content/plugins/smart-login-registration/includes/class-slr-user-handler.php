@@ -198,8 +198,11 @@ class SLR_User_Handler {
      * Create user with phone number
      */
     public function create_user($user_data) {
-        // Create user
-        $user_id = wp_create_user($user_data['email'], $user_data['password'], $user_data['email']);
+        // Generate a unique username automatically
+        $username = $this->generate_unique_username($user_data['email'], $user_data['name'] ?? '');
+        
+        // Create user with unique username
+        $user_id = wp_create_user($username, $user_data['password'], $user_data['email']);
         
         if (is_wp_error($user_id)) {
             return $user_id;
@@ -717,5 +720,39 @@ class SLR_User_Handler {
             wp_redirect(remove_query_arg('slr_set_test_phone'));
             exit;
         }
+    }
+    
+    /**
+     * Generate a unique username automatically
+     */
+    private function generate_unique_username($email, $name = '') {
+        // Try email username part first (before @)
+        $email_username = sanitize_user(substr($email, 0, strpos($email, '@')));
+        
+        if (!username_exists($email_username)) {
+            return $email_username;
+        }
+        
+        // Try name-based username
+        if (!empty($name)) {
+            $name_username = sanitize_user(str_replace(' ', '', strtolower($name)));
+            if (!username_exists($name_username)) {
+                return $name_username;
+            }
+        }
+        
+        // Try email username with numbers
+        $base_username = $email_username;
+        $counter = 1;
+        
+        while (username_exists($base_username . $counter)) {
+            $counter++;
+            // Prevent infinite loop
+            if ($counter > 1000) {
+                break;
+            }
+        }
+        
+        return $base_username . $counter;
     }
 }
