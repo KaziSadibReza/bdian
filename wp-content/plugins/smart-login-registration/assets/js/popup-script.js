@@ -689,15 +689,15 @@ jQuery(document).ready(function ($) {
               .html(response.data.message)
               .show();
 
-            // Close popup and reload page after successful verification
+            // Close popup and redirect to dashboard after successful verification
             setTimeout(function () {
               // Close popup properly
               var popup = $("#slr-login-popup-container");
               popup.removeClass("active");
               $("body").removeClass("slr-popup-open");
 
-              // Reload page immediately
-              location.reload();
+              // Redirect to dashboard
+              window.location.href = "/dashboard/";
             }, 1500);
           } else {
             $response
