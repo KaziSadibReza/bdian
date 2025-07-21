@@ -216,12 +216,12 @@ if (!defined('ABSPATH')) {
                     <div id="slr-forgot-tab" class="slr-tab-pane">
                         <div class="slr-popup-form-header">
                             <h3><?php _e('Reset Password', 'smart-login-registration'); ?></h3>
-                            <p><?php _e('Enter your email or phone number to reset your password', 'smart-login-registration'); ?>
+                            <p><?php _e('Enter your email or phone number to receive an OTP', 'smart-login-registration'); ?>
                             </p>
                         </div>
                         <form id="slr-popup-forgot-form" method="post">
-                            <?php wp_nonce_field('slr_forgot_nonce', 'slr_forgot_nonce'); ?>
-                            <input type="hidden" name="action" value="slr_forgot_password">
+                            <?php wp_nonce_field('slr_otp_nonce', 'slr_otp_nonce'); ?>
+                            <input type="hidden" name="action" value="slr_send_reset_otp">
 
                             <div class="slr-form-group">
                                 <input type="text" name="user_login"
@@ -231,7 +231,7 @@ if (!defined('ABSPATH')) {
 
                             <div class="slr-form-group">
                                 <button type="submit" class="slr-popup-btn slr-btn-primary">
-                                    <?php _e('Reset Password', 'smart-login-registration'); ?>
+                                    <?php _e('Send Reset OTP', 'smart-login-registration'); ?>
                                 </button>
                             </div>
 
@@ -242,6 +242,83 @@ if (!defined('ABSPATH')) {
                                     <?php _e('← Back to Login', 'smart-login-registration'); ?>
                                 </a>
                             </div>
+                        </form>
+                    </div>
+
+                    <!-- Password Reset OTP Verification Form -->
+                    <div id="slr-reset-otp-verify-tab" class="slr-tab-pane">
+                        <div class="slr-popup-form-header">
+                            <h3><?php _e('Verify Reset Code', 'smart-login-registration'); ?></h3>
+                            <p><?php _e('Enter the 4-digit code sent to your email', 'smart-login-registration'); ?></p>
+                        </div>
+                        <form id="slr-popup-reset-otp-verify-form" method="post">
+                            <?php wp_nonce_field('slr_otp_nonce', 'slr_otp_nonce'); ?>
+                            <input type="hidden" name="action" value="slr_verify_reset_otp">
+                            <input type="hidden" name="email" value="">
+                            <input type="hidden" name="user_login" value="">
+
+                            <div class="slr-form-group">
+                                <div class="slr-otp-input-group">
+                                    <input type="text" name="otp"
+                                        placeholder="<?php _e('0000', 'smart-login-registration'); ?>" maxlength="4"
+                                        pattern="[0-9]{4}" required autocomplete="off">
+                                </div>
+                            </div>
+
+                            <div class="slr-form-group">
+                                <button type="submit" class="slr-popup-btn slr-btn-primary">
+                                    <?php _e('Verify Code', 'smart-login-registration'); ?>
+                                </button>
+                            </div>
+
+                            <div class="slr-form-group slr-otp-resend">
+                                <p><?php _e('Didn\'t receive the code?', 'smart-login-registration'); ?></p>
+                                <button type="button" class="slr-resend-reset-otp-btn" disabled>
+                                    <?php _e('Resend OTP (60s)', 'smart-login-registration'); ?>
+                                </button>
+                            </div>
+
+                            <div class="slr-form-group" style="text-align: center; margin-top: 20px;">
+                                <a href="#" class="slr-back-to-forgot" data-tab="forgot">
+                                    <?php _e('← Back to Reset', 'smart-login-registration'); ?>
+                                </a>
+                            </div>
+
+                            <div class="slr-reset-otp-verify-response"></div>
+                        </form>
+                    </div>
+
+                    <!-- New Password Form -->
+                    <div id="slr-new-password-tab" class="slr-tab-pane">
+                        <div class="slr-popup-form-header">
+                            <h3><?php _e('Set New Password', 'smart-login-registration'); ?></h3>
+                            <p><?php _e('Enter your new password below', 'smart-login-registration'); ?></p>
+                        </div>
+                        <form id="slr-popup-new-password-form" method="post">
+                            <?php wp_nonce_field('slr_otp_nonce', 'slr_otp_nonce'); ?>
+                            <input type="hidden" name="action" value="slr_reset_password">
+                            <input type="hidden" name="user_id" value="">
+                            <input type="hidden" name="reset_token" value="">
+
+                            <div class="slr-form-group">
+                                <input type="password" name="new_password"
+                                    placeholder="<?php _e('New Password', 'smart-login-registration'); ?>" 
+                                    required minlength="6">
+                            </div>
+
+                            <div class="slr-form-group">
+                                <input type="password" name="confirm_password"
+                                    placeholder="<?php _e('Confirm New Password', 'smart-login-registration'); ?>" 
+                                    required minlength="6">
+                            </div>
+
+                            <div class="slr-form-group">
+                                <button type="submit" class="slr-popup-btn slr-btn-primary">
+                                    <?php _e('Update Password', 'smart-login-registration'); ?>
+                                </button>
+                            </div>
+
+                            <div class="slr-new-password-response"></div>
                         </form>
                     </div>
                 </div>

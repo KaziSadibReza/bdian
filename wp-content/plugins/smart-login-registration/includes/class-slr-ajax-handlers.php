@@ -50,7 +50,9 @@ class SLR_AJAX_Handlers {
         $user = wp_signon($credentials, false);
         
         if (is_wp_error($user)) {
-            wp_send_json_error(array('message' => $user->get_error_message()));
+            // Custom error handling - replace WordPress default errors
+            $custom_message = $this->get_custom_login_error($user, $username);
+            wp_send_json_error(array('message' => $custom_message));
         } else {
             wp_send_json_success(array('message' => __('Login successful! Redirecting...', 'smart-login-registration')));
         }
@@ -122,7 +124,7 @@ class SLR_AJAX_Handlers {
         }
         
         // Generate and store OTP with high-performance method
-        $otp_result = $this->otp_handler->store_otp($email, null, $otp_type, $temp_data);
+        $otp_result = $this->otp_handler->store_otp($email, $otp_type, null, $temp_data);
         
         if (!$otp_result) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
@@ -221,7 +223,9 @@ class SLR_AJAX_Handlers {
             $user_id = $this->user_handler->create_user($temp_data);
             
             if (is_wp_error($user_id)) {
-                wp_send_json_error(array('message' => $user_id->get_error_message()));
+                // Custom registration error handling
+                $custom_message = $this->get_custom_registration_error($user_id);
+                wp_send_json_error(array('message' => $custom_message));
             }
             
             // Auto login the user
@@ -254,7 +258,7 @@ class SLR_AJAX_Handlers {
         }
         
         // Generate and store new OTP with concurrency protection (temp_data will be preserved automatically)
-        $otp_result = $this->otp_handler->store_otp($email, null, $otp_type);
+        $otp_result = $this->otp_handler->store_otp($email, $otp_type);
         
         if (!$otp_result) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
@@ -295,7 +299,7 @@ class SLR_AJAX_Handlers {
         }
         
         // Generate and store OTP with concurrency protection
-        $otp_result = $this->otp_handler->store_otp($email, null, 'login');
+        $otp_result = $this->otp_handler->store_otp($email, 'login');
         
         if (!$otp_result) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
@@ -348,11 +352,11 @@ class SLR_AJAX_Handlers {
         $reset_key = get_password_reset_key($user);
         
         if (is_wp_error($reset_key)) {
-            wp_send_json_error(array('message' => $reset_key->get_error_message()));
+            wp_send_json_error(array('message' => __('Unable to generate password reset key. Please try again.', 'smart-login-registration')));
         }
         
         // Send reset email
-        $reset_url = network_site_url("wp-login.php?action=rp&key=$reset_key&login=" . rawurlencode($user->user_login), 'login');
+        $reset_url = $this->get_custom_reset_url($reset_key, $user->user_login);
         
         $subject = __('Password Reset Request', 'smart-login-registration');
         $message = sprintf(
@@ -413,7 +417,7 @@ class SLR_AJAX_Handlers {
         // Generate and store OTP with temp data
         $otp = $this->otp_handler->generate_otp();
         
-        if (!$this->otp_handler->store_otp($user_data['email'], $otp, 'register', $user_data)) {
+        if (!$this->otp_handler->store_otp($user_data['email'], 'register', $otp, $user_data)) {
             wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
         }
         
@@ -428,5 +432,305 @@ class SLR_AJAX_Handlers {
         } else {
             wp_send_json_error(array('message' => __('Failed to send OTP. Please try again.', 'smart-login-registration')));
         }
+    }
+    
+    /**
+     * Get custom reset URL for password reset
+     */
+    private function get_custom_reset_url($reset_key, $user_login) {
+        // First, try to find a page with [slr_reset_password] shortcode
+        $reset_page = get_page_by_path('reset-password');
+        
+        if ($reset_page) {
+            return add_query_arg(array(
+                'key' => $reset_key,
+                'login' => rawurlencode($user_login)
+            ), get_permalink($reset_page->ID));
+        }
+        
+        // If no custom page exists, use a query parameter approach
+        return add_query_arg(array(
+            'action' => 'slr_reset',
+            'key' => $reset_key,
+            'login' => rawurlencode($user_login)
+        ), home_url());
+    }
+    
+    /**
+     * Handle send reset OTP request
+     */
+    public function handle_send_reset_otp() {
+        check_ajax_referer('slr_otp_nonce', 'slr_otp_nonce');
+        
+        $user_login = sanitize_text_field($_POST['user_login']);
+        
+        if (empty($user_login)) {
+            wp_send_json_error(array('message' => __('Please enter your email or phone number.', 'smart-login-registration')));
+        }
+        
+        // Check if it's a phone number
+        $user = null;
+        $email_to_send = '';
+        
+        if ($this->user_handler->is_phone_number($user_login)) {
+            $user = $this->user_handler->get_user_by_phone($user_login);
+            if ($user) {
+                $email_to_send = $user->user_email;
+            }
+        } else {
+            // Check if it's an email or username
+            $user = get_user_by('email', $user_login);
+            if ($user) {
+                $email_to_send = $user_login;
+            } else {
+                $user = get_user_by('login', $user_login);
+                if ($user) {
+                    $email_to_send = $user->user_email;
+                }
+            }
+        }
+        
+        if (!$user) {
+            wp_send_json_error(array('message' => __('No user found with that email or phone number.', 'smart-login-registration')));
+        }
+        
+        // Check rate limiting
+        if ($this->otp_handler->is_rate_limited($email_to_send)) {
+            wp_send_json_error(array('message' => __('Too many requests. Please wait before requesting another OTP.', 'smart-login-registration')));
+        }
+        
+        // Generate and store OTP for password reset
+        $otp_result = $this->otp_handler->store_otp($email_to_send, 'password_reset', null, array(
+            'user_id' => $user->ID,
+            'user_login' => $user_login
+        ));
+        
+        if (!$otp_result) {
+            wp_send_json_error(array('message' => __('Failed to generate OTP. Please try again.', 'smart-login-registration')));
+        }
+        
+        // Use the actual OTP generated
+        $otp = $otp_result;
+        
+        // Send OTP email
+        if ($this->otp_handler->send_otp_email($email_to_send, $otp, 'password_reset')) {
+            wp_send_json_success(array(
+                'message' => __('Reset OTP sent successfully. Please check your email.', 'smart-login-registration'),
+                'email' => $email_to_send,
+                'user_login' => $user_login,
+                'step' => 'verify_otp'
+            ));
+        } else {
+            wp_send_json_error(array('message' => __('Failed to send OTP. Please try again.', 'smart-login-registration')));
+        }
+    }
+    
+    /**
+     * Handle verify reset OTP
+     */
+    public function handle_verify_reset_otp() {
+        check_ajax_referer('slr_otp_nonce', 'slr_otp_nonce');
+        
+        $email = sanitize_email($_POST['email']);
+        $otp = sanitize_text_field($_POST['otp']);
+        $user_login = sanitize_text_field($_POST['user_login']);
+        
+        if (!$this->user_handler->is_valid_email($email) || empty($otp) || empty($user_login)) {
+            wp_send_json_error(array('message' => __('Invalid verification data.', 'smart-login-registration')));
+        }
+        
+        // Verify OTP
+        $verification = $this->otp_handler->verify_otp($email, $otp, 'password_reset');
+        
+        if (!$verification['success']) {
+            $error_data = array('message' => $verification['message']);
+            
+            // Include additional error information if available
+            if (isset($verification['error_code'])) {
+                $error_data['error_code'] = $verification['error_code'];
+            }
+            if (isset($verification['attempts_remaining'])) {
+                $error_data['attempts_remaining'] = $verification['attempts_remaining'];
+            }
+            
+            wp_send_json_error($error_data);
+        }
+        
+        // Get user data from temp data
+        $temp_data = $verification['temp_data'];
+        if (!$temp_data || !isset($temp_data['user_id'])) {
+            wp_send_json_error(array('message' => __('Reset data not found. Please try again.', 'smart-login-registration')));
+        }
+        
+        $user = get_user_by('ID', $temp_data['user_id']);
+        if (!$user) {
+            wp_send_json_error(array('message' => __('User not found.', 'smart-login-registration')));
+        }
+        
+        // Generate a temporary reset token for security
+        $reset_token = wp_generate_password(32, false);
+        update_user_meta($user->ID, 'slr_temp_reset_token', array(
+            'token' => $reset_token,
+            'expires' => time() + 600 // 10 minutes
+        ));
+        
+        wp_send_json_success(array(
+            'message' => __('OTP verified successfully. You can now set your new password.', 'smart-login-registration'),
+            'user_id' => $user->ID,
+            'reset_token' => $reset_token,
+            'step' => 'new_password'
+        ));
+    }
+    
+    /**
+     * Handle reset password with new password
+     */
+    public function handle_reset_password() {
+        check_ajax_referer('slr_otp_nonce', 'slr_otp_nonce');
+        
+        $user_id = intval($_POST['user_id']);
+        $reset_token = sanitize_text_field($_POST['reset_token']);
+        $new_password = $_POST['new_password'];
+        $confirm_password = $_POST['confirm_password'];
+        
+        // Validate inputs
+        if (empty($user_id) || empty($reset_token) || empty($new_password) || empty($confirm_password)) {
+            wp_send_json_error(array('message' => __('Please fill in all fields.', 'smart-login-registration')));
+        }
+        
+        if ($new_password !== $confirm_password) {
+            wp_send_json_error(array('message' => __('Passwords do not match.', 'smart-login-registration')));
+        }
+        
+        if (strlen($new_password) < 6) {
+            wp_send_json_error(array('message' => __('Password must be at least 6 characters long.', 'smart-login-registration')));
+        }
+        
+        // Get user
+        $user = get_user_by('ID', $user_id);
+        if (!$user) {
+            wp_send_json_error(array('message' => __('Invalid user.', 'smart-login-registration')));
+        }
+        
+        // Verify reset token
+        $stored_token_data = get_user_meta($user_id, 'slr_temp_reset_token', true);
+        if (!$stored_token_data || 
+            !isset($stored_token_data['token']) || 
+            !isset($stored_token_data['expires']) ||
+            $stored_token_data['token'] !== $reset_token ||
+            $stored_token_data['expires'] < time()) {
+            
+            wp_send_json_error(array('message' => __('Invalid or expired reset token. Please start over.', 'smart-login-registration')));
+        }
+        
+        // Update password
+        wp_set_password($new_password, $user_id);
+        
+        // Clean up reset token
+        delete_user_meta($user_id, 'slr_temp_reset_token');
+        
+        // Clear any active sessions to force re-login
+        $sessions = WP_Session_Tokens::get_instance($user_id);
+        $sessions->destroy_all();
+        
+        // Auto-login the user after successful password reset
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id);
+        
+        // Generate session token for additional security
+        $session_token = $this->otp_handler->generate_session_token($user_id, $user->user_email);
+        
+        // Clear rate limit cache after successful password reset
+        wp_cache_delete("slr_rate_limit_{$user->user_email}");
+        
+        wp_send_json_success(array(
+            'message' => __('Password has been reset successfully! You are now logged in.', 'smart-login-registration'),
+            'step' => 'complete',
+            'auto_logged_in' => true,
+            'session_token' => $session_token,
+            'user_display_name' => $user->display_name
+        ));
+    }
+    
+    /**
+     * Get custom login error message instead of WordPress defaults
+     */
+    private function get_custom_login_error($wp_error, $username) {
+        $error_codes = $wp_error->get_error_codes();
+        $error_message = $wp_error->get_error_message();
+        
+        // Handle phone number not registered
+        if ($this->user_handler->is_phone_number($username)) {
+            // Check if user exists with this phone
+            $found_user = $this->user_handler->get_user_by_phone($username);
+            
+            if (!$found_user) {
+                return __('Phone number not found. Please check your phone number or register a new account.', 'smart-login-registration');
+            } else {
+                return __('The password you entered for this phone number is incorrect.', 'smart-login-registration');
+            }
+        }
+        
+        // Handle specific error codes
+        if (in_array('invalid_username', $error_codes)) {
+            return __('Invalid username. Please check your username or try your email address.', 'smart-login-registration');
+        }
+        
+        if (in_array('incorrect_password', $error_codes)) {
+            return __('The password you entered is incorrect.', 'smart-login-registration');
+        }
+        
+        if (in_array('empty_username', $error_codes)) {
+            return __('Please enter your username or phone number.', 'smart-login-registration');
+        }
+        
+        if (in_array('empty_password', $error_codes)) {
+            return __('Please enter your password.', 'smart-login-registration');
+        }
+        
+        // Check if error message contains phone number pattern
+        if (preg_match('/\b(\d{7,15})\b/', $error_message) && strpos($error_message, 'is not registered') !== false) {
+            return __('Phone number not found. Please check your phone number or register a new account.', 'smart-login-registration');
+        }
+        
+        // Default fallback for any other error
+        return __('Login failed. Please check your credentials and try again.', 'smart-login-registration');
+    }
+    
+    /**
+     * Get custom registration error message instead of WordPress defaults
+     */
+    private function get_custom_registration_error($wp_error) {
+        $error_codes = $wp_error->get_error_codes();
+        $error_message = $wp_error->get_error_message();
+        
+        // Handle specific registration error codes
+        if (in_array('existing_user_login', $error_codes)) {
+            return __('This username is already taken. Please choose a different username.', 'smart-login-registration');
+        }
+        
+        if (in_array('existing_user_email', $error_codes)) {
+            return __('An account with this email address already exists. Please use a different email or try logging in.', 'smart-login-registration');
+        }
+        
+        if (in_array('invalid_email', $error_codes)) {
+            return __('Please enter a valid email address.', 'smart-login-registration');
+        }
+        
+        if (in_array('empty_user_login', $error_codes)) {
+            return __('Please enter a username.', 'smart-login-registration');
+        }
+        
+        if (in_array('empty_email', $error_codes)) {
+            return __('Please enter an email address.', 'smart-login-registration');
+        }
+        
+        // Check for phone number related errors
+        if (strpos($error_message, 'phone') !== false) {
+            return __('There was an issue with the phone number. Please check and try again.', 'smart-login-registration');
+        }
+        
+        // Default fallback for any other registration error
+        return __('Registration failed. Please check your information and try again.', 'smart-login-registration');
     }
 }

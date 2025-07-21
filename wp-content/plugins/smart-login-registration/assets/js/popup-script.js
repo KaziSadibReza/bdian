@@ -31,7 +31,19 @@ jQuery(document).ready(function ($) {
       $(document).on(
         "submit",
         "#slr-popup-forgot-form",
-        this.handleForgotPassword
+        this.handleSendResetOtp
+      );
+
+      // New password reset form submissions
+      $(document).on(
+        "submit",
+        "#slr-popup-reset-otp-verify-form",
+        this.handleVerifyResetOtp
+      );
+      $(document).on(
+        "submit",
+        "#slr-popup-new-password-form",
+        this.handleNewPassword
       );
 
       // OTP form submissions
@@ -49,12 +61,18 @@ jQuery(document).ready(function ($) {
       // OTP login button
       $(document).on("click", ".slr-otp-login-btn", this.showOtpLogin);
 
-      // Resend OTP button
+      // Resend OTP buttons
       $(document).on("click", ".slr-resend-otp-btn", this.handleResendOtp);
+      $(document).on(
+        "click",
+        ".slr-resend-reset-otp-btn",
+        this.handleResendResetOtp
+      );
 
-      // Forgot password link in login form
+      // Navigation links
       $(document).on("click", ".slr-forgot-password", this.switchTab);
       $(document).on("click", ".slr-back-to-login", this.switchTab);
+      $(document).on("click", ".slr-back-to-forgot", this.switchTab);
 
       // ESC key to close popup
       $(document).on("keydown", this.handleEscKey);
@@ -255,29 +273,44 @@ jQuery(document).ready(function ($) {
       });
     },
 
-    handleForgotPassword: function (e) {
+    handleSendResetOtp: function (e) {
       e.preventDefault();
       var $form = $(this);
       var $submitBtn = $form.find('button[type="submit"]');
       var $response = $form.find(".slr-forgot-response");
+      var userLogin = $form.find('input[name="user_login"]').val();
 
       // Clear previous messages
       $response.hide().removeClass("success error");
 
+      // Validate input
+      if (!userLogin.trim()) {
+        $response
+          .addClass("error")
+          .text("Please enter your email or phone number.")
+          .show();
+        return;
+      }
+
       // Add loading state
       $submitBtn.addClass("loading").prop("disabled", true);
-
-      // Prepare data
-      var formData = $form.serialize();
 
       // AJAX request
       $.ajax({
         url: slr_ajax.ajax_url,
         type: "POST",
-        data: formData,
+        data: $form.serialize(),
         success: function (response) {
           if (response.success) {
             $response.addClass("success").text(response.data.message).show();
+
+            // Switch to OTP verification form
+            setTimeout(function () {
+              SmartLoginPopup.switchToResetOtpVerify(
+                response.data.email,
+                response.data.user_login
+              );
+            }, 1500);
           } else {
             $response.addClass("error").text(response.data.message).show();
           }
@@ -292,6 +325,241 @@ jQuery(document).ready(function ($) {
           $submitBtn.removeClass("loading").prop("disabled", false);
         },
       });
+    },
+
+    handleVerifyResetOtp: function (e) {
+      e.preventDefault();
+      var $form = $(this);
+      var $submitBtn = $form.find('button[type="submit"]');
+      var $response = $form.find(".slr-reset-otp-verify-response");
+
+      // Clear previous messages
+      $response.hide().removeClass("success error");
+
+      // Add loading state
+      $submitBtn.addClass("loading").prop("disabled", true);
+
+      // AJAX request
+      $.ajax({
+        url: slr_ajax.ajax_url,
+        type: "POST",
+        data: $form.serialize(),
+        success: function (response) {
+          if (response.success) {
+            $response.addClass("success").text(response.data.message).show();
+
+            // Switch to new password form
+            setTimeout(function () {
+              SmartLoginPopup.switchToNewPassword(
+                response.data.user_id,
+                response.data.reset_token
+              );
+            }, 1500);
+          } else {
+            $response.addClass("error").text(response.data.message).show();
+          }
+        },
+        error: function () {
+          $response
+            .addClass("error")
+            .text("An error occurred. Please try again.")
+            .show();
+        },
+        complete: function () {
+          $submitBtn.removeClass("loading").prop("disabled", false);
+        },
+      });
+    },
+
+    handleNewPassword: function (e) {
+      e.preventDefault();
+      var $form = $(this);
+      var $submitBtn = $form.find('button[type="submit"]');
+      var $response = $form.find(".slr-new-password-response");
+      var newPassword = $form.find('input[name="new_password"]').val();
+      var confirmPassword = $form.find('input[name="confirm_password"]').val();
+
+      // Clear previous messages
+      $response.hide().removeClass("success error");
+
+      // Validate passwords
+      if (!newPassword || !confirmPassword) {
+        $response.addClass("error").text("Please fill in all fields.").show();
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        $response.addClass("error").text("Passwords do not match.").show();
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        $response
+          .addClass("error")
+          .text("Password must be at least 6 characters long.")
+          .show();
+        return;
+      }
+
+      // Add loading state
+      $submitBtn.addClass("loading").prop("disabled", true);
+
+      // AJAX request
+      $.ajax({
+        url: slr_ajax.ajax_url,
+        type: "POST",
+        data: $form.serialize(),
+        success: function (response) {
+          if (response.success) {
+            $response.addClass("success").text(response.data.message).show();
+
+            // Check if user is auto-logged in
+            if (response.data.auto_logged_in) {
+              // User is now logged in, close popup and reload page
+              setTimeout(function () {
+                // Close popup properly
+                var popup = $("#slr-login-popup-container");
+                popup.removeClass("active");
+                $("body").removeClass("slr-popup-open");
+
+                // Show a welcome message
+                if (response.data.user_display_name) {
+                  console.log(
+                    "Password reset successful! Welcome back, " +
+                      response.data.user_display_name +
+                      "!"
+                  );
+                }
+
+                // Force page reload - try multiple methods for compatibility
+                try {
+                  if (typeof window !== "undefined") {
+                    window.location.href = window.location.href;
+                  } else {
+                    location.reload(true);
+                  }
+                } catch (e) {
+                  // Fallback reload method
+                  document.location.reload(true);
+                }
+              }, 1200);
+            } else {
+              // Switch back to login after success
+              setTimeout(function () {
+                SmartLoginPopup.switchTab({
+                  preventDefault: function () {},
+                  target: $('<a data-tab="login"></a>')[0],
+                });
+                // Clear all forms
+                SmartLoginPopup.clearForms();
+              }, 2000);
+            }
+          } else {
+            $response.addClass("error").text(response.data.message).show();
+          }
+        },
+        error: function () {
+          $response
+            .addClass("error")
+            .text("An error occurred. Please try again.")
+            .show();
+        },
+        complete: function () {
+          $submitBtn.removeClass("loading").prop("disabled", false);
+        },
+      });
+    },
+
+    handleResendResetOtp: function (e) {
+      e.preventDefault();
+      var $btn = $(this);
+      var $form = $btn.closest("form");
+      var email = $form.find('input[name="email"]').val();
+      var userLogin = $form.find('input[name="user_login"]').val();
+
+      if (!email || !userLogin) {
+        return;
+      }
+
+      $btn.prop("disabled", true);
+
+      $.ajax({
+        url: slr_ajax.ajax_url,
+        type: "POST",
+        data: {
+          action: "slr_send_reset_otp",
+          user_login: userLogin,
+          slr_otp_nonce: slr_ajax.otp_nonce,
+        },
+        success: function (response) {
+          if (response.success) {
+            SmartLoginPopup.showMessage(
+              ".slr-reset-otp-verify-response",
+              "success",
+              "New OTP sent successfully!"
+            );
+            SmartLoginPopup.startResendTimer($btn, 60);
+          } else {
+            SmartLoginPopup.showMessage(
+              ".slr-reset-otp-verify-response",
+              "error",
+              response.data.message
+            );
+            $btn.prop("disabled", false);
+          }
+        },
+        error: function () {
+          SmartLoginPopup.showMessage(
+            ".slr-reset-otp-verify-response",
+            "error",
+            "Failed to resend OTP. Please try again."
+          );
+          $btn.prop("disabled", false);
+        },
+      });
+    },
+
+    switchToResetOtpVerify: function (email, userLogin) {
+      // Fill in the hidden fields
+      $('#slr-reset-otp-verify-tab input[name="email"]').val(email);
+      $('#slr-reset-otp-verify-tab input[name="user_login"]').val(userLogin);
+
+      // Clear OTP input
+      $('#slr-reset-otp-verify-tab input[name="otp"]').val("");
+
+      // Switch to OTP verification tab
+      SmartLoginPopup.switchToTab("reset-otp-verify");
+
+      // Start resend timer
+      SmartLoginPopup.startResendTimer($(".slr-resend-reset-otp-btn"), 60);
+    },
+
+    switchToNewPassword: function (userId, resetToken) {
+      // Fill in the hidden fields
+      $('#slr-new-password-tab input[name="user_id"]').val(userId);
+      $('#slr-new-password-tab input[name="reset_token"]').val(resetToken);
+
+      // Clear password inputs
+      $('#slr-new-password-tab input[name="new_password"]').val("");
+      $('#slr-new-password-tab input[name="confirm_password"]').val("");
+
+      // Switch to new password tab
+      SmartLoginPopup.switchToTab("new-password");
+    },
+
+    switchToTab: function (tabName) {
+      // Hide all tab panes
+      $(".slr-tab-pane").removeClass("active");
+
+      // Show the target tab
+      $("#slr-" + tabName + "-tab").addClass("active");
+
+      // Update navigation if needed
+      $(".slr-popup-tab-nav a").removeClass("active");
+      $('.slr-popup-tab-nav a[data-tab="' + tabName + '"]').addClass("active");
+
+      // Clear response messages
+      $(".slr-tab-pane .slr-response").hide().removeClass("success error");
     },
 
     handleOtpLogin: function (e) {
@@ -522,12 +790,12 @@ jQuery(document).ready(function ($) {
 
     clearForms: function () {
       $(
-        "#slr-popup-login-form, #slr-popup-register-form, #slr-popup-forgot-form"
+        "#slr-popup-login-form, #slr-popup-register-form, #slr-popup-forgot-form, #slr-popup-reset-otp-verify-form, #slr-popup-new-password-form"
       ).each(function () {
         this.reset();
         $(this)
           .find(
-            ".slr-login-response, .slr-register-response, .slr-forgot-response"
+            ".slr-login-response, .slr-register-response, .slr-forgot-response, .slr-reset-otp-verify-response, .slr-new-password-response"
           )
           .hide();
       });
@@ -550,6 +818,28 @@ jQuery(document).ready(function ($) {
     isValidEmail: function (email) {
       var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
+    },
+
+    // Show message utility
+    showMessage: function (selector, type, message) {
+      var $element = $(selector);
+      $element.removeClass("success error").addClass(type).text(message).show();
+    },
+
+    // Start resend timer utility
+    startResendTimer: function ($btn, seconds) {
+      var countdown = seconds;
+      $btn.prop("disabled", true);
+
+      var interval = setInterval(function () {
+        countdown--;
+        $btn.text("Resend OTP (" + countdown + "s)");
+
+        if (countdown <= 0) {
+          clearInterval(interval);
+          $btn.prop("disabled", false).text("Resend OTP");
+        }
+      }, 1000);
     },
   };
 

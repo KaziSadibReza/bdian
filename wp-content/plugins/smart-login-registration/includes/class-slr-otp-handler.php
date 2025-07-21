@@ -79,7 +79,7 @@ class SLR_OTP_Handler {
     /**
      * Store OTP in database with high-performance concurrency protection
      */
-    public function store_otp($email, $otp = null, $type, $temp_data = null) {
+    public function store_otp($email, $type, $otp = null, $temp_data = null) {
         global $wpdb;
         
         $otp_expiry = isset($this->settings['otp_expiry']) ? (int) $this->settings['otp_expiry'] : 10;
@@ -349,6 +349,7 @@ class SLR_OTP_Handler {
                 $instruction_text = __('Please use the following OTP code to complete your registration:', 'smart-login-registration');
                 break;
             case 'forgot':
+            case 'password_reset':
                 $action_text = __('Password Reset', 'smart-login-registration');
                 $greeting_text = __('Password Reset Request', 'smart-login-registration');
                 $instruction_text = __('Please use the following OTP code to reset your password:', 'smart-login-registration');

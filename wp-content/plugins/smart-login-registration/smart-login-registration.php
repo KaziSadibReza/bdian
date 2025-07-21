@@ -38,6 +38,7 @@ require_once SLR_PLUGIN_DIR . 'includes/class-slr-otp-handler.php';
 require_once SLR_PLUGIN_DIR . 'includes/class-slr-user-handler.php';
 require_once SLR_PLUGIN_DIR . 'includes/class-slr-ajax-handlers.php';
 require_once SLR_PLUGIN_DIR . 'includes/class-slr-admin.php';
+require_once SLR_PLUGIN_DIR . 'includes/class-slr-error-handler.php';
 
 /**
  * Main plugin class initialization
@@ -118,6 +119,7 @@ class SmartLoginRegistrationPlugin {
         wp_clear_scheduled_hook('slr_cleanup_otps');
     }
 }
+
 
 // Initialize plugin
 SmartLoginRegistrationPlugin::get_instance();

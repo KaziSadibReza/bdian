@@ -38,17 +38,45 @@ class SLR_User_Handler {
     }
     
     /**
-     * Check if string is a phone number
+     * Check if string is a phone number or numeric username
      */
     public function is_phone_number($string) {
-        // Remove all non-digit characters
+        // Remove all non-digit characters for checking
         $cleaned = preg_replace('/[^0-9]/', '', $string);
         
-        // Check if it's a valid phone number format
-        // Adjust this pattern based on your country's phone number format
-        return preg_match('/^[0-9]{10,15}$/', $cleaned) || 
-               preg_match('/^\+[0-9]{10,15}$/', $string) ||
-               preg_match('/^01[0-9]{9}$/', $cleaned); // Bangladesh format
+        // Check if it's purely numeric (likely a phone or numeric username)
+        $digit_ratio = strlen($cleaned) / strlen($string);
+        
+        // If it's 7+ digits and mostly numeric, treat as phone/numeric username
+        if ($digit_ratio >= 0.9 && strlen($cleaned) >= 7) {
+            return true;
+        }
+        
+        // Must have at least 10 digits to be considered a standard phone number
+        if (strlen($cleaned) < 10) {
+            return false;
+        }
+        
+        // Check Bangladesh phone number patterns
+        if (preg_match('/^01[0-9]{9}$/', $cleaned) ||           // 01XXXXXXXXX
+            preg_match('/^8801[0-9]{9}$/', $cleaned) ||         // 8801XXXXXXXXX
+            preg_match('/^\+?880[0-9]{10}$/', $string) ||       // +880XXXXXXXXXX
+            preg_match('/^[0-9]{10,15}$/', $cleaned)) {         // General international format
+            return true;
+        }
+        
+        // Additional check: if it starts with + and has 10+ digits, likely a phone
+        if (strpos($string, '+') === 0 && strlen($cleaned) >= 10) {
+            return true;
+        }
+        
+        // Check if it's primarily digits with minimal formatting
+        $digit_ratio = strlen($cleaned) / strlen($string);
+        if ($digit_ratio >= 0.8 && strlen($cleaned) >= 10) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -64,39 +92,91 @@ class SLR_User_Handler {
                preg_match('/^01[0-9]{9}$/', $cleaned); // Bangladesh format
     }
       /**
-     * Get user by phone number
+     * Get user by phone number - EXACT MATCH ONLY
      */
     public function get_user_by_phone($phone) {
-        // First check WooCommerce billing_phone (prioritize WooCommerce integration)
-        $users = get_users(array(
-            'meta_key' => 'billing_phone',
-            'meta_value' => $phone,
-            'number' => 1
-        ));
+        global $wpdb;
         
-        if (!empty($users)) {
-            return $users[0];
+        // Clean phone number (remove spaces, dashes, etc.)
+        $clean_phone = preg_replace('/[^0-9+]/', '', $phone);
+        
+        // Create EXACT phone variations for this specific phone number
+        $phone_variations = array($phone, $clean_phone);
+        
+        // Handle Bangladesh phone number formats - but ONLY for this exact number
+        if (preg_match('/^01[0-9]{9}$/', $clean_phone)) {
+            // If it starts with 01, add +880 and 880 variations for THIS EXACT number
+            $phone_variations[] = '+880' . substr($clean_phone, 1);
+            $phone_variations[] = '880' . substr($clean_phone, 1);
         }
         
-        // Then check plugin's custom phone field
-        $users = get_users(array(
-            'meta_key' => 'phone',
-            'meta_value' => $phone,
-            'number' => 1
-        ));
-        
-        if (!empty($users)) {
-            return $users[0];
+        if (preg_match('/^\+?880[0-9]{10}$/', str_replace('+', '', $clean_phone))) {
+            // If it's +880 or 880 format, add 01 variation for THIS EXACT number
+            $without_country = preg_replace('/^\+?880/', '01', $clean_phone);
+            $phone_variations[] = $without_country;
         }
         
-        // Check user_login field for phone numbers
-        $users = get_users(array(
-            'search' => $phone,
-            'search_columns' => array('user_login'),
-            'number' => 1
-        ));
-
-        return !empty($users) ? $users[0] : null;
+        // Remove duplicates but keep exact order
+        $phone_variations = array_unique($phone_variations);
+        
+        // Search for EXACT matches only - no partial matching
+        foreach ($phone_variations as $phone_variant) {
+            // Check phone_number field (Tutor LMS field) - EXACT match
+            $users = $wpdb->get_results($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->usermeta} 
+                 WHERE meta_key = 'phone_number' AND meta_value = %s
+                 LIMIT 1",
+                $phone_variant
+            ));
+            
+            if (!empty($users)) {
+                return get_user_by('id', $users[0]->user_id);
+            }
+            
+            // Check WooCommerce billing_phone - EXACT match
+            $users = $wpdb->get_results($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->usermeta} 
+                 WHERE meta_key = 'billing_phone' AND meta_value = %s
+                 LIMIT 1",
+                $phone_variant
+            ));
+            
+            if (!empty($users)) {
+                return get_user_by('id', $users[0]->user_id);
+            }
+            
+            // Check plugin's custom phone field - EXACT match
+            $users = $wpdb->get_results($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->usermeta} 
+                 WHERE meta_key = 'phone' AND meta_value = %s
+                 LIMIT 1",
+                $phone_variant
+            ));
+            
+            if (!empty($users)) {
+                return get_user_by('id', $users[0]->user_id);
+            }
+            
+            // Check alternate phone field - EXACT match
+            $users = $wpdb->get_results($wpdb->prepare(
+                "SELECT user_id FROM {$wpdb->usermeta} 
+                 WHERE meta_key = 'alternate_phone' AND meta_value = %s
+                 LIMIT 1",
+                $phone_variant
+            ));
+            
+            if (!empty($users)) {
+                return get_user_by('id', $users[0]->user_id);
+            }
+            
+            // Check if phone is used as username - EXACT match
+            $user = get_user_by('login', $phone_variant);
+            if ($user) {
+                return $user;
+            }
+        }
+        
+        return null;
     }
     
     /**
@@ -143,7 +223,28 @@ class SLR_User_Handler {
             // Also store in shipping phone if WooCommerce is active
             if (class_exists('WooCommerce')) {
                 update_user_meta($user_id, 'shipping_phone', $user_data['phone']);
+                update_user_meta($user_id, 'billing_first_name', $user_data['name']);
+                update_user_meta($user_id, 'shipping_first_name', $user_data['name']);
             }
+            
+            // Store in Tutor LMS phone fields if Tutor is active
+            if (function_exists('tutor') || class_exists('TUTOR\Tutor')) {
+                update_user_meta($user_id, 'tutor_phone', $user_data['phone']);
+                update_user_meta($user_id, '_tutor_phone', $user_data['phone']);
+                update_user_meta($user_id, 'tutor_profile_phone', $user_data['phone']);
+                
+                // Also update Tutor profile data
+                $tutor_profile_data = get_user_meta($user_id, '_tutor_profile_data', true);
+                if (!is_array($tutor_profile_data)) {
+                    $tutor_profile_data = array();
+                }
+                $tutor_profile_data['phone'] = $user_data['phone'];
+                update_user_meta($user_id, '_tutor_profile_data', $tutor_profile_data);
+            }
+            
+            // Also store alternative phone field names for compatibility
+            update_user_meta($user_id, 'phone_number', $user_data['phone']);
+            update_user_meta($user_id, 'user_phone', $user_data['phone']);
         }
         
         // Update WooCommerce customer profile if WooCommerce is active
@@ -219,6 +320,45 @@ class SLR_User_Handler {
         if (!empty($user_data['phone'])) {
             update_user_meta($user_id, 'billing_phone', $user_data['phone']);
             update_user_meta($user_id, 'shipping_phone', $user_data['phone']);
+        }
+    }
+    
+    /**
+     * Sync phone number across all platforms (WooCommerce, Tutor LMS, etc.)
+     */
+    public function sync_phone_fields($user_id, $phone) {
+        // Standard phone fields
+        update_user_meta($user_id, 'phone', $phone);
+        update_user_meta($user_id, 'phone_number', $phone);
+        update_user_meta($user_id, 'user_phone', $phone);
+        
+        // WooCommerce fields
+        if (class_exists('WooCommerce')) {
+            update_user_meta($user_id, 'billing_phone', $phone);
+            update_user_meta($user_id, 'shipping_phone', $phone);
+        }
+        
+        // Tutor LMS fields (try multiple possible field names)
+        if (function_exists('tutor') || class_exists('TUTOR\Tutor')) {
+            update_user_meta($user_id, 'tutor_phone', $phone);
+            update_user_meta($user_id, '_tutor_phone', $phone);
+            update_user_meta($user_id, 'tutor_profile_phone', $phone);
+            
+            // Update Tutor profile data array
+            $tutor_profile_data = get_user_meta($user_id, '_tutor_profile_data', true);
+            if (!is_array($tutor_profile_data)) {
+                $tutor_profile_data = array();
+            }
+            $tutor_profile_data['phone'] = $phone;
+            update_user_meta($user_id, '_tutor_profile_data', $tutor_profile_data);
+        }
+        
+        // Hook for other plugins to extend phone sync
+        do_action('slr_phone_synced', $user_id, $phone);
+        
+        // Log the sync for debugging
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("SLR: Phone synced for user $user_id - Phone: $phone");
         }
     }
     
