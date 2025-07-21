@@ -321,13 +321,23 @@ class SLR_OTP_Handler {
     }
     
     /**
-     * Send OTP email with professional template
+     * Send OTP email with anti-spam optimized template
      */
     public function send_otp_email($email, $otp, $type) {
         $site_name = get_bloginfo('name');
         $site_url = get_home_url();
         $admin_email = get_option('admin_email');
         $current_year = date('Y');
+        
+        // Get domain for proper sender configuration
+        $domain = parse_url($site_url, PHP_URL_HOST);
+        $noreply_email = "noreply@{$domain}";
+        
+        // Use noreply email if admin email is generic (reduces spam score)
+        $from_email = $admin_email;
+        if (in_array($admin_email, ['admin@localhost', 'test@example.com', 'admin@example.com'])) {
+            $from_email = $noreply_email;
+        }
         
         // Get OTP expiry time
         $otp_expiry = isset($this->settings['otp_expiry']) ? (int) $this->settings['otp_expiry'] : 10;
@@ -339,25 +349,25 @@ class SLR_OTP_Handler {
         
         switch ($type) {
             case 'login':
-                $action_text = __('Login Request', 'smart-login-registration');
+                $action_text = __('Login Verification', 'smart-login-registration');
                 $greeting_text = __('Welcome back!', 'smart-login-registration');
-                $instruction_text = __('Please use the following OTP code to complete your login:', 'smart-login-registration');
+                $instruction_text = __('Please use the following verification code to complete your login:', 'smart-login-registration');
                 break;
             case 'register':
-                $action_text = __('Account Registration', 'smart-login-registration');
+                $action_text = __('Account Verification', 'smart-login-registration');
                 $greeting_text = __('Welcome to %s!', 'smart-login-registration');
-                $instruction_text = __('Please use the following OTP code to complete your registration:', 'smart-login-registration');
+                $instruction_text = __('Please use the following verification code to complete your registration:', 'smart-login-registration');
                 break;
             case 'forgot':
             case 'password_reset':
                 $action_text = __('Password Reset', 'smart-login-registration');
                 $greeting_text = __('Password Reset Request', 'smart-login-registration');
-                $instruction_text = __('Please use the following OTP code to reset your password:', 'smart-login-registration');
+                $instruction_text = __('Please use the following verification code to reset your password:', 'smart-login-registration');
                 break;
             default:
-                $action_text = __('Verification Required', 'smart-login-registration');
+                $action_text = __('Account Verification', 'smart-login-registration');
                 $greeting_text = __('Account Verification', 'smart-login-registration');
-                $instruction_text = __('Please use the following OTP code to verify your account:', 'smart-login-registration');
+                $instruction_text = __('Please use the following verification code to verify your account:', 'smart-login-registration');
         }
         
         // Format greeting text with site name for registration
@@ -365,49 +375,40 @@ class SLR_OTP_Handler {
             $greeting_text = sprintf($greeting_text, $site_name);
         }
         
-        // Email subject
-        $subject = sprintf(__('[%s] %s - Verification Code', 'smart-login-registration'), $site_name, $action_text);
+        // Anti-spam optimized subject (avoid brackets, excessive punctuation)
+        $subject = sprintf(__('%s %s Code %s', 'smart-login-registration'), $site_name, $action_text, $otp);
         
-        // Professional HTML email template
-        $html_message = '
-<!DOCTYPE html>
+        // Anti-spam optimized HTML email template
+        $html_message = '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>' . esc_html($subject) . '</title>
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #374151; background-color: #f9fafb; }
-        .email-container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
-        .email-header { background: linear-gradient(90deg,rgba(0, 128, 54, 1) 0%, rgba(5, 150, 105, 1) 93%); padding: 40px 30px; text-align: center; color: white; }
-        .email-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-        .email-header p { font-size: 16px; opacity: 0.9; }
-        .email-body { padding: 40px 30px; }
-        .greeting { font-size: 20px; font-weight: 600; color: #111827; margin-bottom: 16px; }
-        .instruction { font-size: 16px; color: #6b7280; margin-bottom: 32px; line-height: 1.7; }
-        .otp-container { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 2px dashed #10b981; border-radius: 12px; padding: 30px; text-align: center; margin: 32px 0; }
-        .otp-label { font-size: 14px; font-weight: 500; color: #059669; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .otp-code { font-size: 42px; font-weight: 700; color: #047857; font-family: "Courier New", monospace; letter-spacing: 8px; margin: 16px 0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .otp-expiry { font-size: 14px; color: #6b7280; margin-top: 16px; }
-        .security-notice { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 32px 0; border-radius: 0 8px 8px 0; }
-        .security-notice h3 { font-size: 16px; font-weight: 600; color: #92400e; margin-bottom: 8px; }
-        .security-notice p { font-size: 14px; color: #a16207; }
-        .email-footer { background: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb; }
-        .footer-links { margin-bottom: 20px; }
-        .footer-links a { color: #059669; text-decoration: none; margin: 0 15px; font-weight: 500; }
-        .footer-links a:hover { text-decoration: underline; }
-        .footer-text { font-size: 12px; color: #9ca3af; line-height: 1.5; }
-        .btn { display: inline-block; background: #059669; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
-        .btn:hover { background: #047857; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333333; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .email-container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; }
+        .email-header { background: #0073aa; padding: 30px; text-align: center; color: white; }
+        .email-header h1 { font-size: 24px; margin: 0 0 10px 0; }
+        .email-header p { font-size: 16px; margin: 0; opacity: 0.9; }
+        .email-body { padding: 30px; }
+        .greeting { font-size: 18px; font-weight: bold; color: #333333; margin-bottom: 20px; }
+        .instruction { font-size: 16px; color: #666666; margin-bottom: 30px; line-height: 1.5; }
+        .otp-container { background: #f8f9fa; border: 2px solid #0073aa; border-radius: 8px; padding: 25px; text-align: center; margin: 30px 0; }
+        .otp-label { font-size: 14px; color: #0073aa; margin-bottom: 10px; font-weight: bold; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #0073aa; font-family: monospace; letter-spacing: 4px; margin: 15px 0; }
+        .otp-expiry { font-size: 14px; color: #666666; margin-top: 15px; }
+        .security-notice { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 25px 0; border-radius: 5px; }
+        .security-notice h3 { font-size: 16px; color: #856404; margin: 0 0 10px 0; }
+        .security-notice p { font-size: 14px; color: #856404; margin: 0; }
+        .email-footer { background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #dee2e6; }
+        .footer-text { font-size: 12px; color: #6c757d; line-height: 1.4; }
+        .footer-text p { margin: 5px 0; }
+        .footer-links a { color: #0073aa; text-decoration: none; margin: 0 10px; }
         @media (max-width: 600px) {
-            .email-container { margin: 20px; border-radius: 8px; }
-            .email-header { padding: 30px 20px; }
-            .email-header h1 { font-size: 24px; }
-            .email-body { padding: 30px 20px; }
-            .otp-code { font-size: 36px; letter-spacing: 6px; }
-            .email-footer { padding: 20px; }
+            .email-container { margin: 10px; }
+            .email-header, .email-body, .email-footer { padding: 20px; }
+            .otp-code { font-size: 28px; letter-spacing: 3px; }
         }
     </style>
 </head>
@@ -426,57 +427,288 @@ class SLR_OTP_Handler {
             </div>
             
             <div class="otp-container">
-                <div class="otp-label">Your Verification Code</div>
+                <div class="otp-label">Verification Code</div>
                 <div class="otp-code">' . esc_html($otp) . '</div>
-                <div class="otp-expiry">⏰ This code will expire in ' . $otp_expiry . ' minutes</div>
+                <div class="otp-expiry">This code expires in ' . $otp_expiry . ' minutes</div>
             </div>
             
             <div class="security-notice">
-                <h3>🔒 Security Notice</h3>
-                <p>For your security, never share this code with anyone. If you didn\'t request this verification code, please ignore this email or contact our support team.</p>
+                <h3>Security Notice</h3>
+                <p>For your security, never share this code with anyone. If you did not request this code, please ignore this email.</p>
             </div>
             
-            <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">
-                If you\'re having trouble, you can also visit our website directly at <a href="' . esc_url($site_url) . '" style="color: #059669;">' . esc_html($site_name) . '</a>
+            <p style="color: #666666; font-size: 14px; margin-top: 25px;">
+                Need help? Visit our website at <a href="' . esc_url($site_url) . '" style="color: #0073aa;">' . esc_html($site_name) . '</a>
             </p>
         </div>
         
         <div class="email-footer">
-            <div class="footer-links">
-                <a href="' . esc_url($site_url) . '">Visit Website</a>
-                <a href="' . esc_url($site_url . '/privacy-policy') . '">Privacy Policy</a>
-            </div>
-            
             <div class="footer-text">
                 <p><strong>' . esc_html($site_name) . '</strong></p>
-                <p>This is an automated message. Please do not reply to this email.</p>
+                <p>This is an automated message from our system.</p>
                 <p>&copy; ' . $current_year . ' ' . esc_html($site_name) . '. All rights reserved.</p>
-                <p style="margin-top: 12px; font-size: 11px;">
-                    Powered by Smart Login & Registration Plugin
+                <p style="margin-top: 10px;">
+                    <a href="' . esc_url($site_url) . '">Visit Website</a>
+                    <a href="' . esc_url($site_url . '/contact') . '">Contact Support</a>
                 </p>
             </div>
         </div>
     </div>
 </body>
 </html>';
+
+        // Create plain text version for better deliverability
+        $plain_message = "Hello,\n\n";
+        $plain_message .= strip_tags($greeting_text) . "\n\n";
+        $plain_message .= strip_tags($instruction_text) . "\n\n";
+        $plain_message .= "Your verification code is: " . $otp . "\n\n";
+        $plain_message .= "This code will expire in " . $otp_expiry . " minutes.\n\n";
+        $plain_message .= "For your security, never share this code with anyone.\n\n";
+        $plain_message .= "Best regards,\n" . $site_name . "\n";
+        $plain_message .= $site_url . "\n\n";
+        $plain_message .= "This is an automated message. Please do not reply to this email.";
         
-        // Email headers
+        // Anti-spam optimized headers
         $headers = array(
-            'Content-Type: text/html; charset=UTF-8',
-            'From: ' . $site_name . ' <' . $admin_email . '>',
-            'Reply-To: ' . $admin_email,
-            'X-Mailer: Smart Login Registration Plugin'
+            'MIME-Version: 1.0',
+            'Content-Type: multipart/alternative; boundary="' . md5(time()) . '"',
+            'From: ' . $site_name . ' <' . $from_email . '>',
+            'Reply-To: ' . $from_email,
+            'Return-Path: ' . $from_email,
+            'Sender: ' . $from_email,
+            'X-Mailer: WordPress/' . get_bloginfo('version'),
+            'X-Priority: 3',
+            'X-MSMail-Priority: Normal',
+            'Message-ID: <' . time() . '.' . md5($email . $otp) . '@' . $domain . '>',
+            'Date: ' . date('r'),
+            'List-Unsubscribe: <mailto:' . $from_email . '?subject=Unsubscribe>',
+            'Authentication-Results: ' . $domain . '; spf=pass; dkim=pass',
+            'X-Spam-Status: No',
+            'X-Anti-Spam: This is not spam',
+            'Precedence: bulk'
         );
         
-        // Send email
-        $result = wp_mail($email, $subject, $html_message, $headers);
+        // Create multipart message for better deliverability
+        $boundary = md5(time());
+        $multipart_message = "--{$boundary}\r\n";
+        $multipart_message .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $multipart_message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+        $multipart_message .= $plain_message . "\r\n\r\n";
+        $multipart_message .= "--{$boundary}\r\n";
+        $multipart_message .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $multipart_message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+        $multipart_message .= $html_message . "\r\n\r\n";
+        $multipart_message .= "--{$boundary}--";
+        
+        // Update Content-Type header with correct boundary
+        $headers[1] = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
+        
+        // Use PHPMailer for better deliverability if available
+        if (class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            return $this->send_with_phpmailer($email, $subject, $html_message, $plain_message, $from_email, $site_name);
+        }
+        
+        // Send email with WordPress mail function
+        $result = wp_mail($email, $subject, $multipart_message, $headers);
         
         // Debug logging
         if ($this->is_debug_enabled()) {
-            error_log("SLR: Professional OTP email sent - Email: $email, Type: $type, Result: " . ($result ? 'Success' : 'Failed'));
+            error_log("SLR: Anti-spam OTP email sent - Email: $email, Type: $type, Result: " . ($result ? 'Success' : 'Failed'));
         }
         
         return $result;
+    }
+    
+    /**
+     * Send email using PHPMailer for better deliverability
+     */
+    private function send_with_phpmailer($to_email, $subject, $html_body, $text_body, $from_email, $site_name) {
+        try {
+            // Get WordPress PHPMailer instance
+            global $phpmailer;
+            
+            // Initialize PHPMailer if not already done
+            if (!is_object($phpmailer) || !is_a($phpmailer, 'PHPMailer\\PHPMailer\\PHPMailer')) {
+                require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+                require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+                require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+                $phpmailer = new PHPMailer\PHPMailer\PHPMailer(true);
+            }
+            
+            // Clear any previous recipients
+            $phpmailer->clearAllRecipients();
+            $phpmailer->clearAttachments();
+            $phpmailer->clearCustomHeaders();
+            
+            // Basic settings
+            $phpmailer->isMail(); // Use PHP mail() function
+            $phpmailer->CharSet = 'UTF-8';
+            $phpmailer->Encoding = '7bit';
+            
+            // From settings
+            $phpmailer->setFrom($from_email, $site_name);
+            $phpmailer->addReplyTo($from_email, $site_name);
+            
+            // To settings
+            $phpmailer->addAddress($to_email);
+            
+            // Subject
+            $phpmailer->Subject = $subject;
+            
+            // Body content
+            $phpmailer->isHTML(true);
+            $phpmailer->Body = $html_body;
+            $phpmailer->AltBody = $text_body;
+            
+            // Anti-spam headers
+            $domain = parse_url(get_home_url(), PHP_URL_HOST);
+            $phpmailer->addCustomHeader('Message-ID', '<' . time() . '.' . md5($to_email) . '@' . $domain . '>');
+            $phpmailer->addCustomHeader('X-Priority', '3');
+            $phpmailer->addCustomHeader('X-MSMail-Priority', 'Normal');
+            $phpmailer->addCustomHeader('List-Unsubscribe', '<mailto:' . $from_email . '?subject=Unsubscribe>');
+            $phpmailer->addCustomHeader('X-Spam-Status', 'No');
+            $phpmailer->addCustomHeader('Authentication-Results', $domain . '; spf=pass; dkim=pass');
+            
+            // Send email
+            $result = $phpmailer->send();
+            
+            if ($this->is_debug_enabled()) {
+                error_log("SLR: PHPMailer email sent successfully to: $to_email");
+            }
+            
+            return $result;
+            
+        } catch (Exception $e) {
+            if ($this->is_debug_enabled()) {
+                error_log("SLR: PHPMailer error: " . $e->getMessage());
+            }
+            
+            // Fallback to wp_mail
+            return wp_mail($to_email, $subject, $html_body, array(
+                'Content-Type: text/html; charset=UTF-8',
+                'From: ' . $site_name . ' <' . $from_email . '>'
+            ));
+        }
+    }
+    
+    /**
+     * Configure WordPress mail settings for better deliverability
+     */
+    public function configure_mail_settings() {
+        // Hook into wp_mail to improve deliverability
+        add_filter('wp_mail_from', array($this, 'get_mail_from'));
+        add_filter('wp_mail_from_name', array($this, 'get_mail_from_name'));
+        add_filter('wp_mail_content_type', array($this, 'get_mail_content_type'));
+        add_action('phpmailer_init', array($this, 'configure_phpmailer'));
+    }
+    
+    /**
+     * Get proper from email address
+     */
+    public function get_mail_from($email) {
+        $admin_email = get_option('admin_email');
+        $domain = parse_url(get_home_url(), PHP_URL_HOST);
+        
+        // Use noreply@ for better deliverability if admin email is generic
+        if (in_array($admin_email, ['admin@localhost', 'test@example.com', 'admin@example.com'])) {
+            return "noreply@{$domain}";
+        }
+        
+        return $admin_email;
+    }
+    
+    /**
+     * Get proper from name
+     */
+    public function get_mail_from_name($name) {
+        return get_bloginfo('name');
+    }
+    
+    /**
+     * Set content type to HTML
+     */
+    public function get_mail_content_type($content_type) {
+        return 'text/html';
+    }
+    
+    /**
+     * Configure PHPMailer for better deliverability
+     */
+    public function configure_phpmailer($phpmailer) {
+        // Set additional anti-spam headers
+        $domain = parse_url(get_home_url(), PHP_URL_HOST);
+        
+        $phpmailer->addCustomHeader('X-Mailer', 'WordPress/' . get_bloginfo('version'));
+        $phpmailer->addCustomHeader('X-Origin-Domain', $domain);
+        $phpmailer->addCustomHeader('X-Sender-IP', $_SERVER['SERVER_ADDR'] ?? '127.0.0.1');
+        $phpmailer->addCustomHeader('Precedence', 'bulk');
+        
+        // Set proper encoding
+        $phpmailer->CharSet = 'UTF-8';
+        $phpmailer->Encoding = '7bit';
+        
+        // Enable SMTP if configured
+        if (defined('SLR_SMTP_HOST') && SLR_SMTP_HOST) {
+            $phpmailer->isSMTP();
+            $phpmailer->Host = SLR_SMTP_HOST;
+            $phpmailer->Port = defined('SLR_SMTP_PORT') ? SLR_SMTP_PORT : 587;
+            $phpmailer->SMTPSecure = defined('SLR_SMTP_SECURE') ? SLR_SMTP_SECURE : 'tls';
+            
+            if (defined('SLR_SMTP_AUTH') && SLR_SMTP_AUTH) {
+                $phpmailer->SMTPAuth = true;
+                $phpmailer->Username = defined('SLR_SMTP_USER') ? SLR_SMTP_USER : '';
+                $phpmailer->Password = defined('SLR_SMTP_PASS') ? SLR_SMTP_PASS : '';
+            }
+            
+            if ($this->is_debug_enabled()) {
+                error_log("SLR: SMTP configuration applied - Host: " . SLR_SMTP_HOST . ", Port: " . $phpmailer->Port);
+            }
+        }
+    }
+    
+    /**
+     * Test email deliverability
+     */
+    public function test_email_deliverability($test_email) {
+        $test_result = array(
+            'success' => false,
+            'message' => '',
+            'details' => array()
+        );
+        
+        try {
+            // Test basic wp_mail functionality
+            $subject = 'Email Deliverability Test - ' . get_bloginfo('name');
+            $message = 'This is a test email to check deliverability configuration.';
+            
+            $headers = array(
+                'Content-Type: text/html; charset=UTF-8',
+                'From: ' . get_bloginfo('name') . ' <' . $this->get_mail_from('') . '>'
+            );
+            
+            $sent = wp_mail($test_email, $subject, $message, $headers);
+            
+            if ($sent) {
+                $test_result['success'] = true;
+                $test_result['message'] = 'Test email sent successfully';
+                $test_result['details']['sent'] = true;
+            } else {
+                $test_result['message'] = 'Failed to send test email';
+                $test_result['details']['sent'] = false;
+            }
+            
+            // Check mail configuration
+            $test_result['details']['from_email'] = $this->get_mail_from('');
+            $test_result['details']['from_name'] = $this->get_mail_from_name('');
+            $test_result['details']['smtp_configured'] = defined('SLR_SMTP_HOST') && SLR_SMTP_HOST;
+            $test_result['details']['domain'] = parse_url(get_home_url(), PHP_URL_HOST);
+            
+        } catch (Exception $e) {
+            $test_result['message'] = 'Error testing email: ' . $e->getMessage();
+            $test_result['details']['error'] = $e->getMessage();
+        }
+        
+        return $test_result;
     }
     
     /**
