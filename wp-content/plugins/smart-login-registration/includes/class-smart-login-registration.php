@@ -136,32 +136,81 @@ class SmartLoginRegistration {
     }
     
     /**
-     * Sync phone field when user profile is updated
+     * Sync phone number for newly registered users
      */
-    public function sync_phone_on_profile_update($user_id, $old_user_data = null) {
-        if (class_exists('SLR_User_Handler')) {
-            $user_handler = new SLR_User_Handler();
-            $user_handler->sync_phone_fields($user_id);
+    public function sync_new_user_phone($user_id) {
+        $phone = get_user_meta($user_id, 'phone', true);
+        if ($phone) {
+            $this->user_handler->sync_phone_fields($user_id, $phone);
         }
     }
-    
+
     /**
-     * Sync phone field when WooCommerce address is saved
+     * Sync phone number when profile is updated
      */
-    public function sync_phone_on_woo_address_save($user_id, $load_address, $address) {
-        if (class_exists('SLR_User_Handler')) {
-            $user_handler = new SLR_User_Handler();
-            $user_handler->sync_phone_fields($user_id);
+    public function sync_profile_phone($user_id, $old_user_data) {
+        $phone = get_user_meta($user_id, 'phone', true);
+        if ($phone) {
+            $this->user_handler->sync_phone_fields($user_id, $phone);
         }
     }
-    
+
     /**
-     * Sync phone field when Tutor profile is updated
+     * Sync phone number when WooCommerce address is saved
      */
-    public function sync_phone_on_tutor_update($user_id) {
-        if (class_exists('SLR_User_Handler')) {
-            $user_handler = new SLR_User_Handler();
-            $user_handler->sync_phone_fields($user_id);
+    public function sync_woocommerce_phone($user_id, $load_address) {
+        if ($load_address === 'billing') {
+            $phone = get_user_meta($user_id, 'billing_phone', true);
+            if ($phone) {
+                // Update our main phone field
+                update_user_meta($user_id, 'phone', $phone);
+                $this->user_handler->sync_phone_fields($user_id, $phone);
+            }
         }
+    }
+
+    /**
+     * Sync phone when Tutor profile is updated
+     */
+    public function sync_tutor_phone($user_id) {
+        if (isset($_POST['phone'])) {
+            $phone = sanitize_text_field($_POST['phone']);
+            if ($phone) {
+                $this->user_handler->sync_phone_fields($user_id, $phone);
+            }
+        }
+    }
+
+    /**
+     * Populate WooCommerce phone field with our phone data
+     */
+    public function populate_woocommerce_phone_field($fields) {
+        $user_id = get_current_user_id();
+        if ($user_id) {
+            $phone = get_user_meta($user_id, 'phone', true);
+            if ($phone) {
+                if (isset($fields['billing']['billing_phone'])) {
+                    $fields['billing']['billing_phone']['default'] = $phone;
+                }
+                if (isset($fields['shipping']['shipping_phone'])) {
+                    $fields['shipping']['shipping_phone']['default'] = $phone;
+                }
+            }
+        }
+        return $fields;
+    }
+
+    /**
+     * Populate Tutor LMS phone field with our phone data
+     */
+    public function populate_tutor_phone_field($fields) {
+        $user_id = get_current_user_id();
+        if ($user_id) {
+            $phone = get_user_meta($user_id, 'phone', true);
+            if ($phone && isset($fields['phone'])) {
+                $fields['phone']['value'] = $phone;
+            }
+        }
+        return $fields;
     }
 }
