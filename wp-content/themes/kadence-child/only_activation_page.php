@@ -38,7 +38,7 @@ function activation_page_login_styles() {
     ?>
 <style>
 /* Hide the default Smart Login button since we're using custom integration */
-.hidden.slr-login-popup-btn {
+.hidden {
     display: none !important;
 }
 
