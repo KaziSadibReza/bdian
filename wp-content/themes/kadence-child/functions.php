@@ -16,39 +16,6 @@ add_action( 'wp_enqueue_scripts', 'kadence_child_enqueue_styles' );
 
 /****************************** CUSTOM FUNCTIONS ******************************/
 
-/* === ISOLATION SYSTEM FOR ACTIVATION PAGE ===
- * This theme uses conditional logic to isolate activation page customizations
- * from CartFlows and other checkout pages.
- * 
- * SETUP: CartFlows checkout is on HOME PAGE (https://bdian.org/)
- *        Activation page is on ACTIVATE URL (https://bdian.org/activate/)
- * 
- * KEY FUNCTIONS:
- * - is_cartflows_checkout() - Detects home page and CartFlows pages
- * - is_activation_page() - Returns true only for /activate/ page (NOT home page)
- * 
- * ISOLATED CUSTOMIZATIONS:
- * 1. PHP Functions (in functions.php):
- *    - Field removal (billing/shipping)
- *    - Field requirement removal  
- *    - CSS hiding of fields
- *    - Terms auto-check
- *    - Coupon position
- *    - Order review removal
- *    - Payment requirement removal
- *    - Place order button text
- *    - Coupon validation
- * 
- * 2. Template Files (in woocommerce/checkout/):
- *    - form-checkout.php - Hides customer details, custom layout
- *    - form-coupon.php - Bengali text, custom styling
- * 
- * RESULT:
- * - Home Page (CartFlows): Standard WooCommerce functionality with all fields
- * - Activation Page (/activate/): Full customization (hidden fields, Bengali text, etc.)
- * - Other Pages: Unaffected
- */
-
 /**
  * Enqueue Split.js library
  *
@@ -141,14 +108,49 @@ add_filter('woocommerce_new_customer_data', function($customer_data) {
 
 // Function to check if the current page is the activation page
 function is_activation_page() {
-    $url = $_SERVER['REQUEST_URI'];
-    // Now checks for 'activate' in URL
+    // Check URL from various sources (works for AJAX too)
+    $url = '';
+    if (isset($_SERVER['REQUEST_URI'])) {
+        $url = $_SERVER['REQUEST_URI'];
+    } elseif (isset($_SERVER['HTTP_REFERER'])) {
+        $url = $_SERVER['HTTP_REFERER'];
+    } elseif (isset($_POST['_wp_http_referer'])) {
+        $url = $_POST['_wp_http_referer'];
+    }
+    
+    // Check if URL contains 'activate'
     if (strpos($url, 'activate') !== false) {
         return true;
     }
+    
+    // Additional check for AJAX requests
+    if (defined('DOING_AJAX') && DOING_AJAX) {
+        // Check if the referer contains activate
+        if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'activate') !== false) {
+            return true;
+        }
+    }
+    
     return false;
 }
 
-if (is_activation_page()) {
-require_once get_stylesheet_directory() . '/only_activation_page.php';
+// Always load activation page customizations if it's an activation page or AJAX from activation page
+if (is_activation_page() || (defined('DOING_AJAX') && DOING_AJAX && is_activation_page())) {
+    require_once get_stylesheet_directory() . '/only_activation_page.php';
+}
+
+// Ensure activation page customizations work during AJAX requests
+add_action('wp_ajax_woocommerce_apply_coupon', 'ensure_activation_page_on_ajax', 1);
+add_action('wp_ajax_nopriv_woocommerce_apply_coupon', 'ensure_activation_page_on_ajax', 1);
+add_action('wp_ajax_woocommerce_remove_coupon', 'ensure_activation_page_on_ajax', 1);
+add_action('wp_ajax_nopriv_woocommerce_remove_coupon', 'ensure_activation_page_on_ajax', 1);
+
+function ensure_activation_page_on_ajax() {
+    // Check if this AJAX request is from activation page
+    if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'activate') !== false) {
+        // Force load activation page customizations
+        if (!function_exists('custom_order_button_html')) {
+            require_once get_stylesheet_directory() . '/only_activation_page.php';
+        }
+    }
 }
