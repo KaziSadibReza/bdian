@@ -18,15 +18,15 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }} # Use the SSH private key from GitHub secrets
 
-      # - name: Deploy Themes
-      #   uses: SamKirkland/web-deploy@v1
-      #   with:
-      #     target-server: ${{ secrets.FTP_HOST }} # Your server IP
-      #     remote-user: ${{ secrets.FTP_USER }} # Your SSH username
-      #     private-ssh-key: ${{ secrets.SSH_KEY }} # The private key used for SSH authentication
-      #     ssh-port: ${{ secrets.FTP_PORT }} # Custom SSH port
-      #     source-path: ./wp-content/themes/kadence-child # The local directory to upload
-      #     destination-path: /home/u913960925/domains/bdian.org/public_html/wp-content/themes # Remote path on the server
+      - name: Deploy Themes
+        uses: SamKirkland/web-deploy@v1
+        with:
+          target-server: ${{ secrets.FTP_HOST }} # Your server IP
+          remote-user: ${{ secrets.FTP_USER }} # Your SSH username
+          private-ssh-key: ${{ secrets.SSH_KEY }} # The private key used for SSH authentication
+          ssh-port: ${{ secrets.FTP_PORT }} # Custom SSH port
+          source-path: ./wp-content/themes/kadence-child # The local directory to upload
+          destination-path: /home/u913960925/domains/bdian.org/public_html/wp-content/themes # Remote path on the server
 
       - name: Deploy Plugins
         uses: SamKirkland/web-deploy@v1
