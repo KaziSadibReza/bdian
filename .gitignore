@@ -3,7 +3,7 @@ wp-admin/
 wp-includes/
 *.php
 !wp-content/
-
+.htaccess
 # Keep wp-content but ignore cache and temporary folders
 wp-content/uploads/
 wp-content/cache/
@@ -15,7 +15,9 @@ wp-content/litespeed/
 wp-content/webp-express/
 wp-content/.litespeed_conf.dat
 wp-content/languages/
-
+wp-content/ai1wm-backups
+wp-content/aiowps_backups
+wp-content/.htaccess
 # Keep themes (including your Kadence child theme)
 !wp-content/themes/
 wp-content/themes/*
