@@ -146,7 +146,7 @@ function customize_billing_fields($fields ) {
 //remove order review
 remove_action( 'woocommerce_checkout_order_review', 'woocommerce_order_review', 10 );
 //remove required payment methods
-// add_filter( 'woocommerce_cart_needs_payment', '__return_false' );
+ add_filter( 'woocommerce_cart_needs_payment', '__return_false' );
 //required coupon in checkout page
 add_action( 'woocommerce_checkout_process', 'my_validate_coupon_usage' );
 function my_validate_coupon_usage() {
