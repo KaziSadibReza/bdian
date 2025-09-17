@@ -16,8 +16,110 @@ if (is_in_activation_context()) {
 add_filter( 'woocommerce_order_button_html', 'custom_order_button_html' );
 
 function custom_order_button_html( $button_html ) {
-  $button_html = '<button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr__( 'Your desired button text', 'woocommerce' ) . '">' . esc_attr__( 'Complete Activation', 'woocommerce' ) . '</button>';
-  return $button_html;
+    if (!is_user_logged_in()) {
+        // User not logged in - show login button that triggers Smart Login popup
+        $button_html = '<button type="button" class="button alt slr-login-popup-btn" id="slr-login-required">' . esc_attr__( 'Login to Complete Activation', 'woocommerce' ) . '</button>';
+        
+        // Also include the Smart Login Registration popup HTML
+        if (function_exists('SmartLoginRegistration') || class_exists('SmartLoginRegistration')) {
+            // Add the popup shortcode content
+            $button_html .= do_shortcode('[smart_login_popup button_text="Login" button_class="hidden" show_register="yes"]');
+        }
+    } else {
+        // User is logged in - show normal activation button
+        $button_html = '<button type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr__( 'Your desired button text', 'woocommerce' ) . '">' . esc_attr__( 'Complete Activation', 'woocommerce' ) . '</button>';
+    }
+    return $button_html;
+}
+
+// Add custom styles for activation page login integration
+add_action('wp_head', 'activation_page_login_styles');
+function activation_page_login_styles() {
+    ?>
+<style>
+/* Hide the default Smart Login button since we're using custom integration */
+.hidden.slr-login-popup-btn {
+    display: none !important;
+}
+
+/* Style the login required button */
+#slr-login-required {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#slr-login-required:hover {
+    background: #1976D2;
+}
+
+/* Ensure popup appears above everything */
+#slr-login-popup-container {
+    z-index: 999999 !important;
+}
+</style>
+<?php
+}
+
+// Add JavaScript for handling login success and page refresh
+add_action('wp_footer', 'activation_page_login_scripts');
+function activation_page_login_scripts() {
+    ?>
+<script>
+jQuery(document).ready(function($) {
+    // Override the Smart Login success behavior for activation page
+    $(document).on('slr_login_success', function(e, response) {
+        if (window.location.href.indexOf('activate') !== -1) {
+            // We're on activation page - reload to show the activation button
+            setTimeout(function() {
+                window.location.reload();
+            }, 1000);
+        }
+    });
+
+    // Also listen for successful login completion
+    $(document).on('slr_login_complete', function() {
+        if (window.location.href.indexOf('activate') !== -1) {
+            window.location.reload();
+        }
+    });
+
+    // Handle popup close and check login status
+    $(document).on('click', '.slr-popup-close, .slr-popup-overlay', function() {
+        setTimeout(function() {
+            // Check if user is now logged in by making a simple AJAX call
+            $.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'check_login_status'
+                },
+                success: function(response) {
+                    if (response.success && response.data.logged_in) {
+                        window.location.reload();
+                    }
+                }
+            });
+        }, 500);
+    });
+});
+</script>
+<?php
+}
+
+// AJAX handler to check login status
+add_action('wp_ajax_check_login_status', 'ajax_check_login_status');
+add_action('wp_ajax_nopriv_check_login_status', 'ajax_check_login_status');
+function ajax_check_login_status() {
+    wp_send_json_success(array(
+        'logged_in' => is_user_logged_in(),
+        'user_id' => get_current_user_id()
+    ));
 }
 
 /**
@@ -152,7 +254,51 @@ function customize_billing_fields($fields ) {
 //remove order review
 remove_action( 'woocommerce_checkout_order_review', 'woocommerce_order_review', 10 );
 //remove required payment methods
- add_filter( 'woocommerce_cart_needs_payment', '__return_false' );
+add_filter( 'woocommerce_cart_needs_payment', '__return_false' );
+//disable billing address requirement when payment not needed
+add_filter( 'woocommerce_cart_needs_shipping_address', '__return_false' );
+add_filter( 'woocommerce_checkout_get_value', 'activation_page_checkout_defaults', 10, 2 );
+function activation_page_checkout_defaults( $value, $input ) {
+    // Set default values for required billing fields to prevent validation errors
+    switch ( $input ) {
+        case 'billing_country':
+            return 'BD'; // Default country
+        case 'billing_address_1':
+            return 'N/A'; // Default address
+        case 'billing_city':
+            return 'N/A'; // Default city
+        case 'billing_postcode':
+            return '1000'; // Default postcode
+        case 'billing_state':
+            return 'DHK'; // Default state
+    }
+    return $value;
+}
+
+// Disable billing address validation completely for activation page
+add_action('woocommerce_after_checkout_validation', 'remove_billing_address_validation', 10, 2);
+function remove_billing_address_validation($data, $errors) {
+    // Remove any billing address related errors
+    $error_codes_to_remove = array(
+        'billing_country_required',
+        'billing_address_1_required', 
+        'billing_city_required',
+        'billing_postcode_required',
+        'billing_state_required'
+    );
+    
+    foreach ($error_codes_to_remove as $code) {
+        $errors->remove($code);
+    }
+    
+    // Also remove generic address errors
+    $all_errors = $errors->get_error_messages();
+    foreach ($all_errors as $key => $message) {
+        if (strpos($message, 'address') !== false || strpos($message, 'required') !== false) {
+            $errors->remove($errors->get_error_codes()[$key]);
+        }
+    }
+}
 //required coupon in checkout page
 add_action( 'woocommerce_checkout_process', 'my_validate_coupon_usage' );
 function my_validate_coupon_usage() {
