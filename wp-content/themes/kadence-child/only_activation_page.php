@@ -72,20 +72,73 @@ function activation_page_login_scripts() {
     ?>
 <script>
 jQuery(document).ready(function($) {
+    // Override Smart Login's default redirect behavior for activation page
+    var originalAjax = $.ajax;
+    $.ajax = function(options) {
+        // Check if this is a Smart Login AJAX request
+        if (options.url && options.url.indexOf('admin-ajax.php') !== -1 &&
+            options.data && (options.data.indexOf('slr_login') !== -1 ||
+                options.data.indexOf('slr_register') !== -1 ||
+                options.data.indexOf('slr_otp_login') !== -1)) {
+
+            // Override the success callback to prevent dashboard redirect
+            var originalSuccess = options.success;
+            options.success = function(response) {
+                if (originalSuccess) {
+                    originalSuccess(response);
+                }
+
+                // If login/register was successful, stay on activation page
+                if (response.success && window.location.href.indexOf('activate') !== -1) {
+                    // Prevent default redirect and reload activation page instead
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                    return false; // Prevent further execution
+                }
+            };
+        }
+
+        return originalAjax.call(this, options);
+    };
+
+    // Intercept window.location.href changes to prevent dashboard redirects
+    var originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+        value: new Proxy(originalLocation, {
+            set: function(target, property, value) {
+                // If we're on activation page and trying to redirect to dashboard, stay here
+                if (property === 'href' &&
+                    window.location.href.indexOf('activate') !== -1 &&
+                    value.indexOf('dashboard') !== -1) {
+                    window.location.reload();
+                    return true;
+                }
+                target[property] = value;
+                return true;
+            }
+        })
+    });
+
     // Override the Smart Login success behavior for activation page
     $(document).on('slr_login_success', function(e, response) {
         if (window.location.href.indexOf('activate') !== -1) {
-            // We're on activation page - reload to show the activation button
+            e.preventDefault();
+            e.stopPropagation();
             setTimeout(function() {
                 window.location.reload();
             }, 1000);
+            return false;
         }
     });
 
     // Also listen for successful login completion
-    $(document).on('slr_login_complete', function() {
+    $(document).on('slr_login_complete', function(e) {
         if (window.location.href.indexOf('activate') !== -1) {
+            e.preventDefault();
+            e.stopPropagation();
             window.location.reload();
+            return false;
         }
     });
 
