@@ -3,6 +3,16 @@ if(!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+// Helper function to check if we're in activation context (including AJAX)
+function is_in_activation_context() {
+    global $is_activation_ajax;
+    return is_activation_page() || $is_activation_ajax || 
+           (defined('DOING_AJAX') && DOING_AJAX && isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'activate') !== false);
+}
+
+// Only apply activation customizations if we're in activation context
+if (is_in_activation_context()) {
+
 add_filter( 'woocommerce_order_button_html', 'custom_order_button_html' );
 
 function custom_order_button_html( $button_html ) {
@@ -157,3 +167,5 @@ function is_coupon_applicable_for_multiple_products( $coupon_code ) {
     // (e.g., check specific coupon codes, product categories, etc.)
     return false; // By default, assume not applicable
 }
+
+} // End activation context check

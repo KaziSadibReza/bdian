@@ -140,17 +140,48 @@ if (is_activation_page() || (defined('DOING_AJAX') && DOING_AJAX && is_activatio
 }
 
 // Ensure activation page customizations work during AJAX requests
-add_action('wp_ajax_woocommerce_apply_coupon', 'ensure_activation_page_on_ajax', 1);
-add_action('wp_ajax_nopriv_woocommerce_apply_coupon', 'ensure_activation_page_on_ajax', 1);
-add_action('wp_ajax_woocommerce_remove_coupon', 'ensure_activation_page_on_ajax', 1);
-add_action('wp_ajax_nopriv_woocommerce_remove_coupon', 'ensure_activation_page_on_ajax', 1);
+add_action('init', 'setup_activation_ajax_hooks');
 
-function ensure_activation_page_on_ajax() {
-    // Check if this AJAX request is from activation page
-    if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'activate') !== false) {
-        // Force load activation page customizations
+function setup_activation_ajax_hooks() {
+    if (defined('DOING_AJAX') && DOING_AJAX && is_activation_page()) {
+        // Force early loading for AJAX requests from activation page
         if (!function_exists('custom_order_button_html')) {
             require_once get_stylesheet_directory() . '/only_activation_page.php';
         }
+    }
+}
+
+// Hook into WooCommerce AJAX actions specifically
+add_action('wp_ajax_woocommerce_apply_coupon', 'force_activation_context', 1);
+add_action('wp_ajax_nopriv_woocommerce_apply_coupon', 'force_activation_context', 1);
+add_action('wp_ajax_woocommerce_remove_coupon', 'force_activation_context', 1);
+add_action('wp_ajax_nopriv_woocommerce_remove_coupon', 'force_activation_context', 1);
+add_action('wp_ajax_woocommerce_update_order_review', 'force_activation_context', 1);
+add_action('wp_ajax_nopriv_woocommerce_update_order_review', 'force_activation_context', 1);
+
+function force_activation_context() {
+    // Check if this AJAX request is from activation page
+    if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'activate') !== false) {
+        // Force load activation page customizations immediately
+        if (!function_exists('custom_order_button_html')) {
+            require_once get_stylesheet_directory() . '/only_activation_page.php';
+        }
+        
+        // Set a global flag to indicate we're in activation context
+        global $is_activation_ajax;
+        $is_activation_ajax = true;
+        
+        // Debug log (remove after testing)
+        error_log('Activation AJAX context detected: ' . $_SERVER['HTTP_REFERER']);
+    }
+}
+
+// Additional hook to ensure activation context is maintained during checkout updates
+add_action('woocommerce_checkout_update_order_review', 'maintain_activation_context_on_update', 1);
+function maintain_activation_context_on_update($posted_data) {
+    // Check if we're in activation context
+    if (defined('DOING_AJAX') && DOING_AJAX && is_activation_page()) {
+        global $is_activation_ajax;
+        $is_activation_ajax = true;
     }
 }
