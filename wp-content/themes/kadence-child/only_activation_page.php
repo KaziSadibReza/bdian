@@ -20,6 +20,12 @@ function custom_order_button_html( $button_html ) {
   return $button_html;
 }
 
+/**
+ * Make "I have read and agree to the terms and conditions" checkbox checked by default
+ */
+add_filter( 'woocommerce_terms_is_checked_default', '__return_true' );
+
+
 // add to cart massage custom
 add_filter( 'wc_add_to_cart_message_html', 'custom_add_to_cart_message', 10, 3 );
 
