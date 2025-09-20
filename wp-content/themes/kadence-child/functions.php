@@ -96,7 +96,7 @@ function add_some_links_dashboard($links){
 	$links['custom_link'] = [
 		"title" =>	__('All Course', 'tutor'),
 		"url" => "https://bdian.org/course",
-		"icon" => "tutor-icon-mortarboard-o ",
+		"icon" => "fa fa-play ",
 
 	];
     $links['help_link'] = [
