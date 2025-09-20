@@ -175,10 +175,7 @@ function ajax_check_login_status() {
     ));
 }
 
-/**
- * Make "I have read and agree to the terms and conditions" checkbox checked by default
- */
-add_filter( 'woocommerce_terms_is_checked_default', '__return_true' );
+
 
 
 // add to cart massage custom

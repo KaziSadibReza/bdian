@@ -10,4 +10,6 @@ Template: 		kadence
 Version: 		1.0.0
 */
 
-/*
+.tutor-dashboard-menu-purchase_history {
+  display: none !important;
+}

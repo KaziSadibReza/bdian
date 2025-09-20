@@ -13,6 +13,10 @@ function kadence_child_enqueue_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'kadence_child_enqueue_styles' );
 
+/**
+ * Make "I have read and agree to the terms and conditions" checkbox checked by default
+ */
+add_filter( 'woocommerce_terms_is_checked_default', '__return_true' );
 
 /****************************** CUSTOM FUNCTIONS ******************************/
 
@@ -90,9 +94,15 @@ add_filter('tutor_dashboard/nav_items', 'add_some_links_dashboard');
 function add_some_links_dashboard($links){
 
 	$links['custom_link'] = [
+		"title" =>	__('All Course', 'tutor'),
+		"url" => "https://bdian.org/course",
+		"icon" => "tutor-icon-mortarboard-o ",
+
+	];
+    $links['custom_link'] = [
 		"title" =>	__('Live Class', 'tutor'),
-		"url" => "https://course.bdian.org/live-class/",
-		"icon" => "tutor-icon-brand-google-meet ",
+		"url" => "https://bdian.org/live-class",
+		"icon" => "tutor-icon-brand-google-meet",
 
 	];
 	return $links;
