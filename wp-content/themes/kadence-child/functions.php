@@ -99,6 +99,12 @@ function add_some_links_dashboard($links){
 		"icon" => "tutor-icon-mortarboard-o ",
 
 	];
+    $links['help_link'] = [
+		"title" =>	__('Help Desk', 'tutor'),
+		"url" => "https://bdian.org/help-desk",
+		"icon" => "fa fa-question ",
+
+	];
     $links['live_link'] = [
 		"title" =>	__('Live Class Routine', 'tutor'),
 		"url" => "https://bdian.org/live-class",
@@ -114,7 +120,7 @@ function add_some_links_dashboard($links){
     $links['study_abroad_link'] = [
 		"title" =>	__('Study Abroad', 'tutor'),
 		"url" => "https://bdian.org/study-abroad/",
-		"icon" => "tutor-icon-brand-google-meet",
+		"icon" => "fa fa-plane",
 
 	];
 	return $links;
