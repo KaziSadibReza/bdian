@@ -9,7 +9,7 @@
  */
 // Enqueue parent theme styles
 function kadence_child_enqueue_styles() {
-    wp_enqueue_style( 'kadence-parent-style', get_template_directory_uri() . '/style.css' );
+    wp_enqueue_style( 'kadence-parent-style', get_template_directory_uri() . './style.css' );
 }
 add_action( 'wp_enqueue_scripts', 'kadence_child_enqueue_styles' );
 
@@ -99,9 +99,21 @@ function add_some_links_dashboard($links){
 		"icon" => "tutor-icon-mortarboard-o ",
 
 	];
-    $links['custom_link'] = [
-		"title" =>	__('Live Class', 'tutor'),
+    $links['live_link'] = [
+		"title" =>	__('Live Class Routine', 'tutor'),
 		"url" => "https://bdian.org/live-class",
+		"icon" => "tutor-icon-brand-google-meet",
+
+	];
+    $links['private_link'] = [
+		"title" =>	__('One to One Private Batch', 'tutor'),
+		"url" => "https://bdian.org/mentorship/",
+		"icon" => "fa fa-users",
+
+	];
+    $links['study_abroad_link'] = [
+		"title" =>	__('Study Abroad', 'tutor'),
+		"url" => "https://bdian.org/study-abroad/",
 		"icon" => "tutor-icon-brand-google-meet",
 
 	];
